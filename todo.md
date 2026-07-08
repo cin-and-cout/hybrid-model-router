@@ -151,9 +151,9 @@ graph TD
 *Goal: Ensure system robustness to API issues and clean up the code for submission.*
 *Depends on all previous phases.*
 
-- [ ] **Task 6.1: Fireworks API Fallback**
+- [x] **Task 6.1: Fireworks API Fallback**
   - Implement error-handling, timeouts, and automatic retries for Fireworks AI calls. If the remote API fails repeatedly, fall back to returning the local answer.
-- [ ] **Task 6.2: Execution Logging**
+- [x] **Task 6.2: Execution Logging**
   - Set up structured logs (e.g., JSONL) outputting final decisions, routing signals, latency, and costs for production run diagnostics.
-- [ ] **Task 6.3: Code Cleanup & Submission Prep**
+- [x] **Task 6.3: Code Cleanup & Submission Prep**
   - Clean up experimental scripts, update setup/dependency configurations, and write the final execution instructions.
