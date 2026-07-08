@@ -69,13 +69,13 @@ graph TD
 ### Phase 1: Environment & Executor Foundation [Sequential Branch]
 *Goal: Establish local and remote model connections, and create basic execution interfaces.*
 
-- [ ] **Task 1.1: Local Model Server Setup**
+- [x] **Task 1.1: Local Model Server Setup**
   - Select and set up a lightweight local runtime (e.g., Ollama or llama.cpp).
   - Download and configure a small instruction-tuned model (0.5B–3B parameters) suitable for target hardware.
-- [ ] **Task 1.2: Local Executor Client**
+- [x] **Task 1.2: Local Executor Client**
   - Implement a client in Python to query the local model server.
   - Handle standard prompt formatting and basic response parsing.
-- [ ] **Task 1.3: Token & Entropy Extraction**
+- [x] **Task 1.3: Token & Entropy Extraction**
   - Extract and parse token logprobs and entropy from the local model's API responses (required for the entropy signal).
 - [ ] **Task 1.4: Fireworks AI Remote Client**
   - Implement a remote executor using the Fireworks AI client library.
