@@ -136,13 +136,13 @@ graph TD
 *Goal: Dynamically adjust thresholds over the course of execution based on token budget pressure and category-specific history.*
 *This phase is a purely mathematical state-machine and can be developed/unit-tested completely in parallel with Phases 1, 2, 3, and 4.*
 
-- [ ] **Task 5.1: Category Reliability Tracker**
+- [x] **Task 5.1: Category Reliability Tracker**
   - Set up real-time bookkeeping to monitor local model reliability (success/failure) across different task categories.
-- [ ] **Task 5.2: Budget Pressure Calculator**
+- [x] **Task 5.2: Budget Pressure Calculator**
   - Create a utility to track elapsed tokens and estimate remaining budget relative to the remaining task count.
-- [ ] **Task 5.3: Adaptive Adjuster Integration**
+- [x] **Task 5.3: Adaptive Adjuster Integration**
   - Implement dynamic threshold adjustment: raise thresholds (trust local more) when budget pressure is high or category reliability is high; lower thresholds (escalate more) otherwise.
-- [ ] **Task 5.4: A/B Testing vs. v1**
+- [x] **Task 5.4: A/B Testing vs. v1**
   - Compare the adaptive v2 adjuster against the static v1 router. Keep v1 as the default/fallback if v2 does not show a clear performance boost.
 
 ---
