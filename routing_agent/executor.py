@@ -8,6 +8,7 @@ from routing_agent.remote_client import RemoteClient, RemoteExecutionResult
 from routing_agent.evaluator import TrustEvaluator
 from routing_agent.adjuster import BudgetAwareAdjuster
 from routing_agent.gate import PredictiveRoutingGate
+from routing_agent.cache import SemanticCache
 
 class UnifiedExecutionResult(BaseModel):
     text: str
@@ -30,13 +31,15 @@ class UnifiedExecutor:
         remote_client: Optional[RemoteClient] = None,
         trust_evaluator: Optional[TrustEvaluator] = None,
         budget_adjuster: Optional[BudgetAwareAdjuster] = None,
-        predictive_gate: Optional[PredictiveRoutingGate] = None
+        predictive_gate: Optional[PredictiveRoutingGate] = None,
+        semantic_cache: Optional[SemanticCache] = None
     ):
         self.local_client = local_client or LocalClient()
         self.remote_client = remote_client or RemoteClient()
         self.trust_evaluator = trust_evaluator or TrustEvaluator(local_client=self.local_client)
         self.budget_adjuster = budget_adjuster
         self.predictive_gate = predictive_gate or PredictiveRoutingGate(adjuster=self.budget_adjuster)
+        self.semantic_cache = semantic_cache or SemanticCache(local_client=self.local_client)
 
     def _log_execution(
         self,
@@ -80,6 +83,21 @@ class UnifiedExecutor:
         Supports static, dynamic, and adaptive routing strategies.
         """
         start_time = time.time()
+        
+        # Check semantic cache first
+        if self.semantic_cache:
+            cached_res = self.semantic_cache.get(prompt)
+            if cached_res:
+                latency = time.time() - start_time
+                self._log_execution(
+                    prompt=prompt,
+                    routing_strategy=routing_strategy,
+                    category=category,
+                    result=cached_res,
+                    latency=latency
+                )
+                return cached_res
+        
         
         if routing_strategy == "static":
             is_remote = use_remote if use_remote is not None else False
@@ -280,4 +298,9 @@ class UnifiedExecutor:
             result=result,
             latency=latency
         )
+        
+        # Save to semantic cache on success (skip fallbacks and existing cache hits)
+        if self.semantic_cache and result.source != "local (fallback)" and result.source != "cache hit":
+            self.semantic_cache.set(prompt, result)
+            
         return result
