@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 from routing_agent.evaluator import TrustEvaluator
-from routing_agent.local_client import LocalClient, LocalExecutionResult
+from routing_agent.local_client import LocalClient, LocalExecutionResult, TokenDetail
 
 def test_compute_self_consistency_math_majority():
     # Setup mock local client returning consistent values
@@ -48,3 +48,50 @@ def test_compute_self_consistency_text_pairwise():
     # pair 3: "hello" vs "world" -> intersection {}, union {"hello", "world"} -> 0.0
     # Average: (0.5 + 0.5 + 0.0) / 3 = 0.3333
     assert score == pytest.approx(1.0 / 3.0)
+
+def test_compute_entropy_signal():
+    evaluator = TrustEvaluator()
+    tokens = [
+        TokenDetail(token="hello", logprob=-0.1, entropy=0.2),
+        TokenDetail(token="world", logprob=-2.3, entropy=1.5),
+        TokenDetail(token="!", logprob=-0.01, entropy=0.0)
+    ]
+    res = LocalExecutionResult(
+        text="hello world!",
+        tokens=tokens,
+        mean_logprob=-0.8,
+        min_logprob=-2.3,
+        mean_entropy=0.57,
+        raw_response={}
+    )
+    
+    sig = evaluator.compute_entropy_signal(res, high_entropy_threshold=1.0)
+    
+    assert sig["mean_entropy"] == 0.57
+    assert sig["min_logprob"] == -2.3
+    assert sig["high_entropy_ratio"] == pytest.approx(1.0 / 3.0)
+
+def test_verify_structure():
+    evaluator = TrustEvaluator()
+    
+    # Structured output (JSON) validation
+    assert evaluator.verify_structure('{"name": "Alice"}', "structured_output") is True
+    assert evaluator.verify_structure('{"name": "Alice"}', "structured_output", ["age"]) is False
+    assert evaluator.verify_structure('invalid json', "structured_output") is False
+    
+    # Code (python syntax compilation) validation
+    valid_code = "def add(a, b):\n    return a + b"
+    invalid_code = "def add(a, b)\n    return a + b" # SyntaxError: missing colon
+    
+    assert evaluator.verify_structure(valid_code, "code") is True
+    assert evaluator.verify_structure(invalid_code, "code") is False
+    
+    # Wrapped in markdown
+    wrapped_valid = "```python\nclass Test:\n    pass\n```"
+    wrapped_invalid = "```python\nclass Test\n    pass\n```"
+    
+    assert evaluator.verify_structure(wrapped_valid, "code") is True
+    assert evaluator.verify_structure(wrapped_invalid, "code") is False
+    
+    # Other categories should pass by default
+    assert evaluator.verify_structure("plain text", "math") is True
