@@ -4,7 +4,7 @@ Welcome! This document outlines the development workflow and implementation phas
 
 ---
 
-## 🛠 Developer & AI Agent Guidelines
+## Developer & AI Agent Guidelines
 
 To maintain codebase stability, prevent regressions, and facilitate collaboration, all developers and AI agents must strictly follow these workflow and testing standards:
 
@@ -30,11 +30,11 @@ Every feature or task must be thoroughly tested before merging. Depending on the
 
 ---
 
-## 📅 Implementation Phases & Parallelizability
+## Implementation Phases & Parallelizability
 
 To maximize development velocity, entire phases or large blocks of work have been designed to be developed in parallel.
 
-### 🗺️ Parallel Development Roadmap
+### Parallel Development Roadmap
 
 ```mermaid
 graph TD
