@@ -32,7 +32,8 @@ class UnifiedExecutor:
         trust_evaluator: Optional[TrustEvaluator] = None,
         budget_adjuster: Optional[BudgetAwareAdjuster] = None,
         predictive_gate: Optional[PredictiveRoutingGate] = None,
-        semantic_cache: Optional[SemanticCache] = None
+        semantic_cache: Optional[SemanticCache] = None,
+        cascade: Optional[List[Dict[str, Any]]] = None
     ):
         self.local_client = local_client or LocalClient()
         self.remote_client = remote_client or RemoteClient()
@@ -40,6 +41,10 @@ class UnifiedExecutor:
         self.budget_adjuster = budget_adjuster
         self.predictive_gate = predictive_gate or PredictiveRoutingGate(adjuster=self.budget_adjuster)
         self.semantic_cache = semantic_cache or SemanticCache(local_client=self.local_client)
+        self.cascade = cascade or [
+            {"client": self.local_client, "type": "local", "name": getattr(self.local_client, "model", "local-0.5B")},
+            {"client": self.remote_client, "type": "remote", "name": getattr(self.remote_client, "model", "remote-70B")}
+        ]
 
     def _log_execution(
         self,
@@ -144,112 +149,112 @@ class UnifiedExecutor:
                 self.trust_evaluator.consistency_threshold = adjusted["consistency_threshold"]
                 self.trust_evaluator.entropy_threshold = adjusted["entropy_threshold"]
                 
-            # Check predictive routing gate to bypass local execution entirely
+            # Check predictive routing gate to determine starting cascade tier
+            start_index = 0
             if self.predictive_gate and self.predictive_gate.should_bypass_local(prompt, category):
-                try:
-                    remote_res = self.remote_client.query(
-                        prompt=prompt,
-                        temperature=temperature,
-                        max_tokens=max_tokens,
-                        system_prompt=system_prompt
-                    )
+                if self.cascade[0]["type"] == "local" and len(self.cascade) > 1:
+                    start_index = 1
                     
-                    if routing_strategy == "adaptive" and self.budget_adjuster:
-                        self.budget_adjuster.register_task_completed(
-                            category=category,
-                            local_text="",
-                            remote_text=remote_res.text,
-                            remote_tokens_used=remote_res.total_tokens
-                        )
-                        
-                    result = UnifiedExecutionResult(
-                        text=remote_res.text,
-                        source="remote (predictive bypass)",
-                        remote_result=remote_res,
-                        local_tokens_used=0,
-                        remote_tokens_used=remote_res.total_tokens,
-                        escalated=True,
-                        trust_report={"escalate": True, "predictive_bypass": True}
-                    )
-                except Exception as e:
-                    import sys
-                    print(f"Warning: Remote query failed during predictive bypass ({e}). Falling back to local response.", file=sys.stderr)
-                    # If remote failed, fallback to local pass
-                    local_res = self.local_client.query(
-                        prompt=prompt,
-                        temperature=0.0,
-                        max_tokens=max_tokens,
-                        system_prompt=system_prompt
-                    )
-                    if routing_strategy == "adaptive" and self.budget_adjuster:
-                        self.budget_adjuster.register_task_completed(
-                            category=category,
-                            local_text=local_res.text,
-                            remote_text=None,
-                            remote_tokens_used=0
-                        )
-                    result = UnifiedExecutionResult(
-                        text=local_res.text,
-                        source="local (fallback)",
-                        local_result=local_res,
-                        local_tokens_used=local_res.total_tokens,
-                        remote_tokens_used=0,
-                        escalated=False,
-                        trust_report={"escalate": False, "predictive_bypass_failed": True}
-                    )
-            else:
-                # 1. Run local pass at temperature 0
-                local_res = self.local_client.query(
-                    prompt=prompt,
-                    temperature=0.0,
-                    max_tokens=max_tokens,
-                    system_prompt=system_prompt
-                )
+            accumulated_local_tokens = 0
+            last_local_res = None
+            last_trust_report = None
+            
+            # Cascade processing loop
+            for idx in range(start_index, len(self.cascade)):
+                tier = self.cascade[idx]
+                client = tier["client"]
+                client_type = tier["type"]
+                client_name = tier.get("name", f"tier_{idx}")
                 
-                # 2. Evaluate trust
-                trust_report = self.trust_evaluator.evaluate_trust(
-                    prompt=prompt,
-                    local_result=local_res,
-                    category=category,
-                    required_keys=required_keys,
-                    system_prompt=system_prompt
-                )
-                
-                local_tokens = local_res.total_tokens + trust_report.get("consistency_tokens", 0)
-                
-                if trust_report["escalate"]:
-                    # 3. Escalate to remote
+                if client_type == "remote" or idx == len(self.cascade) - 1:
                     try:
-                        remote_res = self.remote_client.query(
+                        remote_res = client.query(
                             prompt=prompt,
                             temperature=temperature,
                             max_tokens=max_tokens,
                             system_prompt=system_prompt
                         )
                         
-                        # Update adjuster if present
                         if routing_strategy == "adaptive" and self.budget_adjuster:
+                            local_text = last_local_res.text if last_local_res else ""
                             self.budget_adjuster.register_task_completed(
                                 category=category,
-                                local_text=local_res.text,
+                                local_text=local_text,
                                 remote_text=remote_res.text,
                                 remote_tokens_used=remote_res.total_tokens
                             )
                             
+                        trust_info = last_trust_report or {"escalate": True}
+                        if start_index > 0:
+                            trust_info["predictive_bypass"] = True
+                        trust_info["cascade_index"] = idx
+                        trust_info["cascade_name"] = client_name
+                        
+                        if start_index > 0:
+                            source_label = "remote (predictive bypass)"
+                        elif len(self.cascade) == 2:
+                            source_label = "remote"
+                        else:
+                            source_label = f"remote ({client_name})"
+                            
                         result = UnifiedExecutionResult(
                             text=remote_res.text,
-                            source="remote",
-                            local_result=local_res,
+                            source=source_label,
+                            local_result=last_local_res,
                             remote_result=remote_res,
-                            local_tokens_used=local_tokens,
+                            local_tokens_used=accumulated_local_tokens,
                             remote_tokens_used=remote_res.total_tokens,
-                            escalated=True,
-                            trust_report=trust_report
+                            escalated=idx > start_index or start_index > 0,
+                            trust_report=trust_info
                         )
+                        break
                     except Exception as e:
                         import sys
-                        print(f"Warning: Remote query failed ({e}). Falling back to local response.", file=sys.stderr)
+                        print(f"Warning: Cascade tier {client_name} query failed ({e}).", file=sys.stderr)
                         
+                        if last_local_res:
+                            if routing_strategy == "adaptive" and self.budget_adjuster:
+                                self.budget_adjuster.register_task_completed(
+                                    category=category,
+                                    local_text=last_local_res.text,
+                                    remote_text=None,
+                                    remote_tokens_used=0
+                                )
+                            result = UnifiedExecutionResult(
+                                text=last_local_res.text,
+                                source="local (fallback)",
+                                local_result=last_local_res,
+                                local_tokens_used=accumulated_local_tokens,
+                                remote_tokens_used=0,
+                                escalated=False,
+                                trust_report=last_trust_report or {"escalate": False, "cascade_fallback": True}
+                            )
+                            break
+                        else:
+                            raise
+                else:
+                    # Local model tier: query it and check trust evaluator
+                    self.trust_evaluator.local_client = client
+                    local_res = client.query(
+                        prompt=prompt,
+                        temperature=0.0,
+                        max_tokens=max_tokens,
+                        system_prompt=system_prompt
+                    )
+                    
+                    trust_report = self.trust_evaluator.evaluate_trust(
+                        prompt=prompt,
+                        local_result=local_res,
+                        category=category,
+                        required_keys=required_keys,
+                        system_prompt=system_prompt
+                    )
+                    
+                    accumulated_local_tokens += local_res.total_tokens + trust_report.get("consistency_tokens", 0)
+                    last_local_res = local_res
+                    last_trust_report = trust_report
+                    
+                    if not trust_report["escalate"]:
                         if routing_strategy == "adaptive" and self.budget_adjuster:
                             self.budget_adjuster.register_task_completed(
                                 category=category,
@@ -257,36 +262,23 @@ class UnifiedExecutor:
                                 remote_text=None,
                                 remote_tokens_used=0
                             )
+                        if len(self.cascade) == 2:
+                            source_label = "local"
+                        else:
+                            source_label = f"local ({client_name})"
                             
                         result = UnifiedExecutionResult(
                             text=local_res.text,
-                            source="local (fallback)",
+                            source=source_label,
                             local_result=local_res,
-                            local_tokens_used=local_tokens,
+                            local_tokens_used=accumulated_local_tokens,
                             remote_tokens_used=0,
-                            escalated=False,
+                            escalated=idx > start_index or start_index > 0,
                             trust_report=trust_report
                         )
-                else:
-                    # 4. Return local answer
-                    # Update adjuster if present
-                    if routing_strategy == "adaptive" and self.budget_adjuster:
-                        self.budget_adjuster.register_task_completed(
-                            category=category,
-                            local_text=local_res.text,
-                            remote_text=None,
-                            remote_tokens_used=0
-                        )
-                        
-                    result = UnifiedExecutionResult(
-                        text=local_res.text,
-                        source="local",
-                        local_result=local_res,
-                        local_tokens_used=local_tokens,
-                        remote_tokens_used=0,
-                        escalated=False,
-                        trust_report=trust_report
-                    )
+                        break
+                    
+                    print(f"Escalating from cascade tier {client_name} to next tier.")
         else:
             raise ValueError(f"Unknown routing strategy: {routing_strategy}")
 
