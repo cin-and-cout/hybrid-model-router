@@ -123,11 +123,11 @@ graph TD
 *Goal: Optimize static thresholds using the evaluation harness to find the best accuracy-to-token trade-off.*
 *Depends on Phase 2 & Phase 3.*
 
-- [ ] **Task 4.1: Sweep Optimizer Script**
+- [x] **Task 4.1: Sweep Optimizer Script**
   - Write a search/optimization script to sweep through combinations of `consistency_threshold` and `entropy_threshold`.
-- [ ] **Task 4.2: Calibration**
+- [x] **Task 4.2: Calibration**
   - Run the sweep on the evaluation dataset. Find thresholds that minimize Fireworks tokens while maintaining the accuracy floor with a safety margin.
-- [ ] **Task 4.3: Performance Validation**
+- [x] **Task 4.3: Performance Validation**
   - Compare the calibrated v1 router against the local-only and remote-only baselines and document the gains.
 
 ---
