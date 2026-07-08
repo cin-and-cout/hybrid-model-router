@@ -166,7 +166,7 @@ graph TD
 
 - [x] **Task 7.1: Predictive Routing Gate**
   - Design a lightweight classifier (e.g., embedding-based gate or keyphrase dictionary) to identify highly complex queries before running the local pass, bypassing the local LLM entirely.
-- [ ] **Task 7.2: Semantic Consistency Evaluation**
+- [x] **Task 7.2: Semantic Consistency Evaluation**
   - Replace exact string checks for self-consistency with sentence embedding cosine-similarity calculations.
 - [ ] **Task 7.3: Semantic Cache Layer**
   - Integrate a vector database (e.g., ChromaDB) or local vector cache to store prompt-response pairs, enabling zero-token returns for high-similarity query repetitions.
