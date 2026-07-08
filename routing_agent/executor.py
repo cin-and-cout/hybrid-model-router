@@ -1,3 +1,6 @@
+import json
+import time
+from datetime import datetime
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 from routing_agent.local_client import LocalClient, LocalExecutionResult
@@ -32,6 +35,32 @@ class UnifiedExecutor:
         self.trust_evaluator = trust_evaluator or TrustEvaluator(local_client=self.local_client)
         self.budget_adjuster = budget_adjuster
 
+    def _log_execution(
+        self,
+        prompt: str,
+        routing_strategy: str,
+        category: Optional[str],
+        result: UnifiedExecutionResult,
+        latency: float
+    ):
+        log_entry = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "prompt": prompt,
+            "routing_strategy": routing_strategy,
+            "category": category,
+            "source": result.source,
+            "escalated": result.escalated,
+            "local_tokens_used": result.local_tokens_used,
+            "remote_tokens_used": result.remote_tokens_used,
+            "latency_seconds": latency,
+            "trust_report": result.trust_report
+        }
+        try:
+            with open("routing_execution.jsonl", "a") as f:
+                f.write(json.dumps(log_entry) + "\n")
+        except Exception:
+            pass
+
     def execute(
         self,
         prompt: str,
@@ -47,6 +76,8 @@ class UnifiedExecutor:
         Executes the prompt by routing it to either the local or remote client.
         Supports static, dynamic, and adaptive routing strategies.
         """
+        start_time = time.time()
+        
         if routing_strategy == "static":
             is_remote = use_remote if use_remote is not None else False
             if is_remote:
@@ -56,7 +87,7 @@ class UnifiedExecutor:
                     max_tokens=max_tokens,
                     system_prompt=system_prompt
                 )
-                return UnifiedExecutionResult(
+                result = UnifiedExecutionResult(
                     text=res.text,
                     source="remote",
                     remote_result=res,
@@ -71,7 +102,7 @@ class UnifiedExecutor:
                     max_tokens=max_tokens,
                     system_prompt=system_prompt
                 )
-                return UnifiedExecutionResult(
+                result = UnifiedExecutionResult(
                     text=res.text,
                     source="local",
                     local_result=res,
@@ -113,32 +144,54 @@ class UnifiedExecutor:
             
             if trust_report["escalate"]:
                 # 3. Escalate to remote
-                remote_res = self.remote_client.query(
-                    prompt=prompt,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    system_prompt=system_prompt
-                )
-                
-                # Update adjuster if present
-                if routing_strategy == "adaptive" and self.budget_adjuster:
-                    self.budget_adjuster.register_task_completed(
-                        category=category,
-                        local_text=local_res.text,
-                        remote_text=remote_res.text,
-                        remote_tokens_used=remote_res.total_tokens
+                try:
+                    remote_res = self.remote_client.query(
+                        prompt=prompt,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        system_prompt=system_prompt
                     )
                     
-                return UnifiedExecutionResult(
-                    text=remote_res.text,
-                    source="remote",
-                    local_result=local_res,
-                    remote_result=remote_res,
-                    local_tokens_used=local_tokens,
-                    remote_tokens_used=remote_res.total_tokens,
-                    escalated=True,
-                    trust_report=trust_report
-                )
+                    # Update adjuster if present
+                    if routing_strategy == "adaptive" and self.budget_adjuster:
+                        self.budget_adjuster.register_task_completed(
+                            category=category,
+                            local_text=local_res.text,
+                            remote_text=remote_res.text,
+                            remote_tokens_used=remote_res.total_tokens
+                        )
+                        
+                    result = UnifiedExecutionResult(
+                        text=remote_res.text,
+                        source="remote",
+                        local_result=local_res,
+                        remote_result=remote_res,
+                        local_tokens_used=local_tokens,
+                        remote_tokens_used=remote_res.total_tokens,
+                        escalated=True,
+                        trust_report=trust_report
+                    )
+                except Exception as e:
+                    import sys
+                    print(f"Warning: Remote query failed ({e}). Falling back to local response.", file=sys.stderr)
+                    
+                    if routing_strategy == "adaptive" and self.budget_adjuster:
+                        self.budget_adjuster.register_task_completed(
+                            category=category,
+                            local_text=local_res.text,
+                            remote_text=None,
+                            remote_tokens_used=0
+                        )
+                        
+                    result = UnifiedExecutionResult(
+                        text=local_res.text,
+                        source="local (fallback)",
+                        local_result=local_res,
+                        local_tokens_used=local_tokens,
+                        remote_tokens_used=0,
+                        escalated=False,
+                        trust_report=trust_report
+                    )
             else:
                 # 4. Return local answer
                 # Update adjuster if present
@@ -150,7 +203,7 @@ class UnifiedExecutor:
                         remote_tokens_used=0
                     )
                     
-                return UnifiedExecutionResult(
+                result = UnifiedExecutionResult(
                     text=local_res.text,
                     source="local",
                     local_result=local_res,
@@ -161,3 +214,13 @@ class UnifiedExecutor:
                 )
         else:
             raise ValueError(f"Unknown routing strategy: {routing_strategy}")
+
+        latency = time.time() - start_time
+        self._log_execution(
+            prompt=prompt,
+            routing_strategy=routing_strategy,
+            category=category,
+            result=result,
+            latency=latency
+        )
+        return result

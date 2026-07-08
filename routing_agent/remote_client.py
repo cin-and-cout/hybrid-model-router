@@ -73,8 +73,22 @@ class RemoteClient:
         if max_tokens is not None:
             payload["max_tokens"] = max_tokens
             
-        # Call the Fireworks SDK chat completions endpoint
-        completion = self.client.chat.completions.create(**payload)
+        # Call the Fireworks SDK chat completions endpoint with automatic retries
+        import time
+        max_retries = 3
+        backoff_factor = 2.0
+        
+        # Add request timeout to payload if not already set (typically 'timeout' is accepted by the SDK)
+        payload["timeout"] = 30.0
+        
+        for attempt in range(max_retries):
+            try:
+                completion = self.client.chat.completions.create(**payload)
+                break
+            except Exception as e:
+                if attempt == max_retries - 1:
+                    raise e
+                time.sleep(backoff_factor ** attempt)
         
         text = ""
         if completion.choices:

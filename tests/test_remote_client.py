@@ -65,5 +65,6 @@ def test_remote_client_query_success(mocker):
         model="accounts/fireworks/models/llama-v3p1-70b-instruct",
         messages=[{"role": "user", "content": "Hello Remote"}],
         temperature=0.7,
-        max_tokens=100
+        max_tokens=100,
+        timeout=30.0
     )

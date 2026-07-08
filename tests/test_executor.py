@@ -203,3 +203,85 @@ def test_unified_executor_adaptive():
     
     assert mock_evaluator.consistency_threshold == 0.3
     assert mock_evaluator.entropy_threshold == 0.9
+
+def test_unified_executor_fallback():
+    mock_local = MagicMock(spec=LocalClient)
+    mock_remote = MagicMock(spec=RemoteClient)
+    mock_evaluator = MagicMock(spec=TrustEvaluator)
+    
+    mock_local.query.return_value = LocalExecutionResult(
+        text="local fallback answer",
+        total_tokens=10,
+        raw_response={}
+    )
+    
+    mock_evaluator.evaluate_trust.return_value = {
+        "escalate": True,
+        "signals": {"structural_valid": True, "mean_entropy": 0.8, "self_consistency": 0.3},
+        "failures": {"structural": False, "entropy": True, "consistency": True},
+        "consistency_tokens": 15
+    }
+    
+    # Simulate API failure (e.g. ConnectionError, RateLimitError)
+    mock_remote.query.side_effect = RuntimeError("API service unavailable")
+    
+    executor = UnifiedExecutor(
+        local_client=mock_local,
+        remote_client=mock_remote,
+        trust_evaluator=mock_evaluator
+    )
+    
+    result = executor.execute(
+        prompt="Solve very complex math",
+        routing_strategy="dynamic",
+        category="math"
+    )
+    
+    # Source should reflect the fallback and return the local answer
+    assert result.source == "local (fallback)"
+    assert result.text == "local fallback answer"
+    assert result.local_tokens_used == 25
+    assert result.remote_tokens_used == 0
+    assert result.escalated is False
+
+def test_unified_executor_logging():
+    import os
+    import json
+    
+    log_file = "routing_execution.jsonl"
+    if os.path.exists(log_file):
+        os.remove(log_file)
+        
+    mock_local = MagicMock(spec=LocalClient)
+    mock_local.query.return_value = LocalExecutionResult(
+        text="logged local response",
+        total_tokens=15,
+        raw_response={}
+    )
+    
+    executor = UnifiedExecutor(local_client=mock_local)
+    
+    result = executor.execute(
+        prompt="Test logging prompt",
+        routing_strategy="static",
+        use_remote=False
+    )
+    
+    assert os.path.exists(log_file)
+    with open(log_file, "r") as f:
+        lines = f.readlines()
+        assert len(lines) == 1
+        log_entry = json.loads(lines[0])
+        
+        assert "timestamp" in log_entry
+        assert log_entry["prompt"] == "Test logging prompt"
+        assert log_entry["routing_strategy"] == "static"
+        assert log_entry["source"] == "local"
+        assert log_entry["escalated"] is False
+        assert log_entry["local_tokens_used"] == 15
+        assert log_entry["remote_tokens_used"] == 0
+        assert "latency_seconds" in log_entry
+        
+    os.remove(log_file)
+
+
