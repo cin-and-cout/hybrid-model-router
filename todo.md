@@ -168,7 +168,7 @@ graph TD
   - Design a lightweight classifier (e.g., embedding-based gate or keyphrase dictionary) to identify highly complex queries before running the local pass, bypassing the local LLM entirely.
 - [x] **Task 7.2: Semantic Consistency Evaluation**
   - Replace exact string checks for self-consistency with sentence embedding cosine-similarity calculations.
-- [ ] **Task 7.3: Semantic Cache Layer**
+- [x] **Task 7.3: Semantic Cache Layer**
   - Integrate a vector database (e.g., ChromaDB) or local vector cache to store prompt-response pairs, enabling zero-token returns for high-similarity query repetitions.
 - [ ] **Task 7.4: Multi-Model Cascade**
   - Extend the router to support multi-tier local and remote model cascades (e.g., Local Small 0.5B -> Local Medium 7B -> Remote Large 70B).
