@@ -18,11 +18,25 @@ class TrustEvaluator:
         consistency_temp: float = 0.7
     ):
         self.local_client = local_client or LocalClient()
-        self.consistency_threshold = consistency_threshold
-        self.entropy_threshold = entropy_threshold
         self.consistency_n = consistency_n
         self.consistency_temp = consistency_temp
         self.last_consistency_tokens = 0
+        
+        # Load calibrated thresholds if available
+        import os
+        import json
+        config_path = "routing_config.json"
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, "r") as f:
+                    config = json.load(f)
+                    consistency_threshold = config.get("consistency_threshold", consistency_threshold)
+                    entropy_threshold = config.get("entropy_threshold", entropy_threshold)
+            except Exception:
+                pass
+                
+        self.consistency_threshold = consistency_threshold
+        self.entropy_threshold = entropy_threshold
 
     def compute_self_consistency(
         self,
