@@ -44,7 +44,8 @@ class TrustEvaluator:
         category: str,
         n: int = 3,
         temperature: float = 0.7,
-        system_prompt: Optional[str] = None
+        system_prompt: Optional[str] = None,
+        local_text: Optional[str] = None
     ) -> float:
         """
         Queries the local model N times at a higher temperature, and measures
@@ -64,6 +65,23 @@ class TrustEvaluator:
             predictions.append(res.text)
             self.last_consistency_tokens += res.total_tokens
             
+        # Try to use local embeddings for semantic consistency evaluation
+        try:
+            target_text = local_text if local_text is not None else (predictions[0] if predictions else "")
+            target_emb = self.local_client.get_embedding(target_text)
+            
+            if target_emb and isinstance(target_emb, list) and all(isinstance(x, (int, float)) for x in target_emb):
+                similarities = []
+                for pred in predictions:
+                    pred_emb = self.local_client.get_embedding(pred)
+                    if pred_emb and isinstance(pred_emb, list) and all(isinstance(x, (int, float)) for x in pred_emb):
+                        sim = self._cosine_similarity(target_emb, pred_emb)
+                        similarities.append(sim)
+                if similarities:
+                    return sum(similarities) / len(similarities)
+        except Exception:
+            pass
+            
         category = category.strip().lower()
         if category in ("math", "reasoning"):
             cleaned_preds = [clean_string(p) for p in predictions]
@@ -79,6 +97,17 @@ class TrustEvaluator:
                     total_similarity += sim
                     pairs_count += 1
             return total_similarity / pairs_count if pairs_count > 0 else 1.0
+
+    def _cosine_similarity(self, v1: List[float], v2: List[float]) -> float:
+        import math
+        if not v1 or not v2 or len(v1) != len(v2):
+            return 0.0
+        dot_product = sum(a * b for a, b in zip(v1, v2))
+        norm_a = math.sqrt(sum(a * a for a in v1))
+        norm_b = math.sqrt(sum(b * b for b in v2))
+        if norm_a == 0.0 or norm_b == 0.0:
+            return 0.0
+        return dot_product / (norm_a * norm_b)
 
     def compute_entropy_signal(
         self,
@@ -158,7 +187,8 @@ class TrustEvaluator:
             category=category,
             n=self.consistency_n,
             temperature=self.consistency_temp,
-            system_prompt=system_prompt
+            system_prompt=system_prompt,
+            local_text=local_result.text
         )
         consistency_failed = self_consistency < self.consistency_threshold
         

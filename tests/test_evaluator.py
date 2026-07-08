@@ -162,3 +162,30 @@ def test_evaluate_trust_escalation_triggers():
     assert report["failures"]["structural"] is False
     assert report["failures"]["entropy"] is False
     assert report["failures"]["consistency"] is True
+
+def test_compute_self_consistency_semantic():
+    mock_client = MagicMock(spec=LocalClient)
+    
+    mock_client.get_embedding.side_effect = lambda text: {
+        "hello": [1.0, 0.0],
+        "hi": [0.8, 0.6],
+        "bye": [0.0, 1.0]
+    }.get(text, [0.0, 0.0])
+    
+    mock_client.query.side_effect = [
+        LocalExecutionResult(text="hello", raw_response={}),
+        LocalExecutionResult(text="hi", raw_response={}),
+        LocalExecutionResult(text="bye", raw_response={})
+    ]
+    
+    evaluator = TrustEvaluator(local_client=mock_client)
+    score = evaluator.compute_self_consistency(
+        prompt="Greeting",
+        category="general",
+        n=3,
+        temperature=0.7,
+        local_text="hello"
+    )
+    
+    assert score == pytest.approx(0.6)
+

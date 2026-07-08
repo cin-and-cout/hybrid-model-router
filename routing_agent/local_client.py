@@ -144,3 +144,20 @@ class LocalClient:
             
         normalized = [p / sum_p for p in probs]
         return -sum(p * math.log(p) for p in normalized if p > 0.0)
+
+    def get_embedding(self, text: str) -> List[float]:
+        """
+        Retrieves a vector embedding from the local Ollama service for semantic similarity calculations.
+        """
+        url = f"{self.base_url}/api/embeddings"
+        payload = {
+            "model": self.model,
+            "prompt": text
+        }
+        try:
+            response = self.client.post(url, json=payload)
+            response.raise_for_status()
+            data = response.json()
+            return data.get("embedding", [])
+        except Exception as e:
+            raise RuntimeError(f"Failed to retrieve local embedding: {e}")
