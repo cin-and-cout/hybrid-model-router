@@ -1,0 +1,34 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama-server
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # Note: If running on a system with NVIDIA GPU support, uncomment the lines below:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: routing-agent
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - FIREWORKS_API_KEY=${FIREWORKS_API_KEY}
+    volumes:
+      - .:/app
+    # Default is to run tests. To run your main script instead, override this command
+    # e.g., command: ["python", "main.py"]
+    command: ["python", "-m", "pytest"]
+
+volumes:
+  ollama_data:
