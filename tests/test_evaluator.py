@@ -95,3 +95,70 @@ def test_verify_structure():
     
     # Other categories should pass by default
     assert evaluator.verify_structure("plain text", "math") is True
+
+def test_evaluate_trust_all_pass():
+    mock_client = MagicMock(spec=LocalClient)
+    mock_client.query.return_value = LocalExecutionResult(text="7", raw_response={})
+    
+    evaluator = TrustEvaluator(
+        local_client=mock_client,
+        consistency_threshold=0.6,
+        entropy_threshold=0.8,
+        consistency_n=3,
+        consistency_temp=0.7
+    )
+    
+    local_res = LocalExecutionResult(
+        text="7",
+        mean_entropy=0.3,
+        raw_response={}
+    )
+    
+    trust_report = evaluator.evaluate_trust(
+        prompt="Solve 3x-7=14",
+        local_result=local_res,
+        category="math"
+    )
+    
+    assert trust_report["escalate"] is False
+    assert trust_report["signals"]["structural_valid"] is True
+    assert trust_report["signals"]["mean_entropy"] == 0.3
+    assert trust_report["signals"]["self_consistency"] == 1.0
+    assert trust_report["failures"]["structural"] is False
+    assert trust_report["failures"]["entropy"] is False
+    assert trust_report["failures"]["consistency"] is False
+
+def test_evaluate_trust_escalation_triggers():
+    mock_client = MagicMock(spec=LocalClient)
+    
+    # 1. Structural failure triggers escalation
+    mock_client.query.return_value = LocalExecutionResult(text="invalid json", raw_response={})
+    evaluator = TrustEvaluator(local_client=mock_client, entropy_threshold=0.8, consistency_threshold=0.6)
+    local_res = LocalExecutionResult(text="invalid json", mean_entropy=0.2, raw_response={})
+    
+    report = evaluator.evaluate_trust("Get user", local_res, "structured_output")
+    assert report["escalate"] is True
+    assert report["failures"]["structural"] is True
+    assert report["failures"]["entropy"] is False
+    
+    # 2. High entropy triggers escalation
+    mock_client.query.return_value = LocalExecutionResult(text="7", raw_response={})
+    local_res = LocalExecutionResult(text="7", mean_entropy=0.9, raw_response={})
+    report = evaluator.evaluate_trust("Solve math", local_res, "math")
+    assert report["escalate"] is True
+    assert report["failures"]["structural"] is False
+    assert report["failures"]["entropy"] is True
+    assert report["failures"]["consistency"] is False
+    
+    # 3. Low consistency triggers escalation
+    mock_client.query.side_effect = [
+        LocalExecutionResult(text="7", raw_response={}),
+        LocalExecutionResult(text="8", raw_response={}),
+        LocalExecutionResult(text="9", raw_response={})
+    ]
+    local_res = LocalExecutionResult(text="7", mean_entropy=0.2, raw_response={})
+    report = evaluator.evaluate_trust("Solve math", local_res, "math")
+    assert report["escalate"] is True
+    assert report["failures"]["structural"] is False
+    assert report["failures"]["entropy"] is False
+    assert report["failures"]["consistency"] is True

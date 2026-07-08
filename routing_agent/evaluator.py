@@ -9,8 +9,19 @@ class TrustEvaluator:
     Evaluates trust signals for local model execution to decide if a query
     needs to be escalated to a larger remote model.
     """
-    def __init__(self, local_client: Optional[LocalClient] = None):
+    def __init__(
+        self, 
+        local_client: Optional[LocalClient] = None,
+        consistency_threshold: float = 0.6,
+        entropy_threshold: float = 0.8,
+        consistency_n: int = 3,
+        consistency_temp: float = 0.7
+    ):
         self.local_client = local_client or LocalClient()
+        self.consistency_threshold = consistency_threshold
+        self.entropy_threshold = entropy_threshold
+        self.consistency_n = consistency_n
+        self.consistency_temp = consistency_temp
 
     def compute_self_consistency(
         self,
@@ -60,20 +71,15 @@ class TrustEvaluator:
         """
         Extracts token-level entropy and confidence metrics from the local execution result.
         """
-        tokens = local_result.tokens
-        if not tokens:
-            return {
-                "mean_entropy": 0.0,
-                "min_logprob": 0.0,
-                "high_entropy_ratio": 0.0
-            }
-            
-        high_entropy_count = sum(1 for t in tokens if t.entropy > high_entropy_threshold)
-        high_entropy_ratio = float(high_entropy_count) / len(tokens)
+        tokens = local_result.tokens or []
+        high_entropy_ratio = 0.0
+        if tokens:
+            high_entropy_count = sum(1 for t in tokens if t.entropy > high_entropy_threshold)
+            high_entropy_ratio = float(high_entropy_count) / len(tokens)
         
         return {
-            "mean_entropy": local_result.mean_entropy,
-            "min_logprob": local_result.min_logprob,
+            "mean_entropy": local_result.mean_entropy or 0.0,
+            "min_logprob": local_result.min_logprob or 0.0,
             "high_entropy_ratio": high_entropy_ratio
         }
 
@@ -106,3 +112,51 @@ class TrustEvaluator:
         if matches:
             return "\n".join(matches).strip()
         return text.strip()
+
+    def evaluate_trust(
+        self,
+        prompt: str,
+        local_result: LocalExecutionResult,
+        category: str,
+        required_keys: Optional[List[str]] = None,
+        system_prompt: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Combines consistency, entropy, and structural signals to decide if the local execution
+        should be escalated to the remote model.
+        """
+        structural_valid = self.verify_structure(
+            text=local_result.text,
+            category=category,
+            required_keys=required_keys
+        )
+        structural_failed = not structural_valid
+        
+        entropy_sig = self.compute_entropy_signal(local_result)
+        mean_entropy = entropy_sig["mean_entropy"]
+        entropy_failed = mean_entropy > self.entropy_threshold
+        
+        self_consistency = self.compute_self_consistency(
+            prompt=prompt,
+            category=category,
+            n=self.consistency_n,
+            temperature=self.consistency_temp,
+            system_prompt=system_prompt
+        )
+        consistency_failed = self_consistency < self.consistency_threshold
+        
+        escalate = consistency_failed or entropy_failed or structural_failed
+        
+        return {
+            "escalate": escalate,
+            "signals": {
+                "structural_valid": structural_valid,
+                "mean_entropy": mean_entropy,
+                "self_consistency": self_consistency
+            },
+            "failures": {
+                "structural": structural_failed,
+                "entropy": entropy_failed,
+                "consistency": consistency_failed
+            }
+        }
