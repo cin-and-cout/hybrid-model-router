@@ -22,6 +22,7 @@ class TrustEvaluator:
         self.entropy_threshold = entropy_threshold
         self.consistency_n = consistency_n
         self.consistency_temp = consistency_temp
+        self.last_consistency_tokens = 0
 
     def compute_self_consistency(
         self,
@@ -35,6 +36,7 @@ class TrustEvaluator:
         Queries the local model N times at a higher temperature, and measures
         the consistency/agreement among the generated outputs.
         """
+        self.last_consistency_tokens = 0
         if n <= 1:
             return 1.0
             
@@ -46,6 +48,7 @@ class TrustEvaluator:
                 system_prompt=system_prompt
             )
             predictions.append(res.text)
+            self.last_consistency_tokens += res.total_tokens
             
         category = category.strip().lower()
         if category in ("math", "reasoning"):
@@ -158,5 +161,6 @@ class TrustEvaluator:
                 "structural": structural_failed,
                 "entropy": entropy_failed,
                 "consistency": consistency_failed
-            }
+            },
+            "consistency_tokens": self.last_consistency_tokens
         }
