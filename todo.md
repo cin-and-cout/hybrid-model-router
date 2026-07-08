@@ -104,14 +104,14 @@ graph TD
 *Goal: Implement multiple statistical and structural verification signals to decide if the local answer is reliable.*
 *Depends on Phase 1 for live model responses/entropy.*
 
-- [ ] **Task 3.1: Self-Consistency Signal (Signal 1)**
+- [x] **Task 3.1: Self-Consistency Signal (Signal 1)**
   - Implement a local sampling runner that queries the local model $N$ times at temperature $> 0$.
   - Calculate consistency/agreement score (e.g., exact match frequency for short outputs or similarity metrics for free text).
-- [ ] **Task 3.2: Entropy / Logprob Signal (Signal 2)**
+- [x] **Task 3.2: Entropy / Logprob Signal (Signal 2)**
   - Implement scoring based on token-level entropy/logprobs retrieved in Task 1.3.
-- [ ] **Task 3.3: External/Structural Verification Signal (Signal 3)**
+- [x] **Task 3.3: External/Structural Verification Signal (Signal 3)**
   - Write format check utilities (e.g., JSON validator, regex constraints, and code compilation checkers).
-- [ ] **Task 3.4: Trust Evaluator Logic v1**
+- [x] **Task 3.4: Trust Evaluator Logic v1**
   - Combine the signals into a unified OR-based routing decision rule:
     ```python
     escalate = (self_consistency < consistency_threshold) or (entropy > entropy_threshold) or structural_failed
