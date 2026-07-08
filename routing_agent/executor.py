@@ -7,6 +7,7 @@ from routing_agent.local_client import LocalClient, LocalExecutionResult
 from routing_agent.remote_client import RemoteClient, RemoteExecutionResult
 from routing_agent.evaluator import TrustEvaluator
 from routing_agent.adjuster import BudgetAwareAdjuster
+from routing_agent.gate import PredictiveRoutingGate
 
 class UnifiedExecutionResult(BaseModel):
     text: str
@@ -28,12 +29,14 @@ class UnifiedExecutor:
         local_client: Optional[LocalClient] = None, 
         remote_client: Optional[RemoteClient] = None,
         trust_evaluator: Optional[TrustEvaluator] = None,
-        budget_adjuster: Optional[BudgetAwareAdjuster] = None
+        budget_adjuster: Optional[BudgetAwareAdjuster] = None,
+        predictive_gate: Optional[PredictiveRoutingGate] = None
     ):
         self.local_client = local_client or LocalClient()
         self.remote_client = remote_client or RemoteClient()
         self.trust_evaluator = trust_evaluator or TrustEvaluator(local_client=self.local_client)
         self.budget_adjuster = budget_adjuster
+        self.predictive_gate = predictive_gate or PredictiveRoutingGate(adjuster=self.budget_adjuster)
 
     def _log_execution(
         self,
@@ -123,27 +126,8 @@ class UnifiedExecutor:
                 self.trust_evaluator.consistency_threshold = adjusted["consistency_threshold"]
                 self.trust_evaluator.entropy_threshold = adjusted["entropy_threshold"]
                 
-            # 1. Run local pass at temperature 0
-            local_res = self.local_client.query(
-                prompt=prompt,
-                temperature=0.0,
-                max_tokens=max_tokens,
-                system_prompt=system_prompt
-            )
-            
-            # 2. Evaluate trust
-            trust_report = self.trust_evaluator.evaluate_trust(
-                prompt=prompt,
-                local_result=local_res,
-                category=category,
-                required_keys=required_keys,
-                system_prompt=system_prompt
-            )
-            
-            local_tokens = local_res.total_tokens + trust_report.get("consistency_tokens", 0)
-            
-            if trust_report["escalate"]:
-                # 3. Escalate to remote
+            # Check predictive routing gate to bypass local execution entirely
+            if self.predictive_gate and self.predictive_gate.should_bypass_local(prompt, category):
                 try:
                     remote_res = self.remote_client.query(
                         prompt=prompt,
@@ -152,29 +136,122 @@ class UnifiedExecutor:
                         system_prompt=system_prompt
                     )
                     
-                    # Update adjuster if present
                     if routing_strategy == "adaptive" and self.budget_adjuster:
                         self.budget_adjuster.register_task_completed(
                             category=category,
-                            local_text=local_res.text,
+                            local_text="",
                             remote_text=remote_res.text,
                             remote_tokens_used=remote_res.total_tokens
                         )
                         
                     result = UnifiedExecutionResult(
                         text=remote_res.text,
-                        source="remote",
-                        local_result=local_res,
+                        source="remote (predictive bypass)",
                         remote_result=remote_res,
-                        local_tokens_used=local_tokens,
+                        local_tokens_used=0,
                         remote_tokens_used=remote_res.total_tokens,
                         escalated=True,
-                        trust_report=trust_report
+                        trust_report={"escalate": True, "predictive_bypass": True}
                     )
                 except Exception as e:
                     import sys
-                    print(f"Warning: Remote query failed ({e}). Falling back to local response.", file=sys.stderr)
-                    
+                    print(f"Warning: Remote query failed during predictive bypass ({e}). Falling back to local response.", file=sys.stderr)
+                    # If remote failed, fallback to local pass
+                    local_res = self.local_client.query(
+                        prompt=prompt,
+                        temperature=0.0,
+                        max_tokens=max_tokens,
+                        system_prompt=system_prompt
+                    )
+                    if routing_strategy == "adaptive" and self.budget_adjuster:
+                        self.budget_adjuster.register_task_completed(
+                            category=category,
+                            local_text=local_res.text,
+                            remote_text=None,
+                            remote_tokens_used=0
+                        )
+                    result = UnifiedExecutionResult(
+                        text=local_res.text,
+                        source="local (fallback)",
+                        local_result=local_res,
+                        local_tokens_used=local_res.total_tokens,
+                        remote_tokens_used=0,
+                        escalated=False,
+                        trust_report={"escalate": False, "predictive_bypass_failed": True}
+                    )
+            else:
+                # 1. Run local pass at temperature 0
+                local_res = self.local_client.query(
+                    prompt=prompt,
+                    temperature=0.0,
+                    max_tokens=max_tokens,
+                    system_prompt=system_prompt
+                )
+                
+                # 2. Evaluate trust
+                trust_report = self.trust_evaluator.evaluate_trust(
+                    prompt=prompt,
+                    local_result=local_res,
+                    category=category,
+                    required_keys=required_keys,
+                    system_prompt=system_prompt
+                )
+                
+                local_tokens = local_res.total_tokens + trust_report.get("consistency_tokens", 0)
+                
+                if trust_report["escalate"]:
+                    # 3. Escalate to remote
+                    try:
+                        remote_res = self.remote_client.query(
+                            prompt=prompt,
+                            temperature=temperature,
+                            max_tokens=max_tokens,
+                            system_prompt=system_prompt
+                        )
+                        
+                        # Update adjuster if present
+                        if routing_strategy == "adaptive" and self.budget_adjuster:
+                            self.budget_adjuster.register_task_completed(
+                                category=category,
+                                local_text=local_res.text,
+                                remote_text=remote_res.text,
+                                remote_tokens_used=remote_res.total_tokens
+                            )
+                            
+                        result = UnifiedExecutionResult(
+                            text=remote_res.text,
+                            source="remote",
+                            local_result=local_res,
+                            remote_result=remote_res,
+                            local_tokens_used=local_tokens,
+                            remote_tokens_used=remote_res.total_tokens,
+                            escalated=True,
+                            trust_report=trust_report
+                        )
+                    except Exception as e:
+                        import sys
+                        print(f"Warning: Remote query failed ({e}). Falling back to local response.", file=sys.stderr)
+                        
+                        if routing_strategy == "adaptive" and self.budget_adjuster:
+                            self.budget_adjuster.register_task_completed(
+                                category=category,
+                                local_text=local_res.text,
+                                remote_text=None,
+                                remote_tokens_used=0
+                            )
+                            
+                        result = UnifiedExecutionResult(
+                            text=local_res.text,
+                            source="local (fallback)",
+                            local_result=local_res,
+                            local_tokens_used=local_tokens,
+                            remote_tokens_used=0,
+                            escalated=False,
+                            trust_report=trust_report
+                        )
+                else:
+                    # 4. Return local answer
+                    # Update adjuster if present
                     if routing_strategy == "adaptive" and self.budget_adjuster:
                         self.budget_adjuster.register_task_completed(
                             category=category,
@@ -185,33 +262,13 @@ class UnifiedExecutor:
                         
                     result = UnifiedExecutionResult(
                         text=local_res.text,
-                        source="local (fallback)",
+                        source="local",
                         local_result=local_res,
                         local_tokens_used=local_tokens,
                         remote_tokens_used=0,
                         escalated=False,
                         trust_report=trust_report
                     )
-            else:
-                # 4. Return local answer
-                # Update adjuster if present
-                if routing_strategy == "adaptive" and self.budget_adjuster:
-                    self.budget_adjuster.register_task_completed(
-                        category=category,
-                        local_text=local_res.text,
-                        remote_text=None,
-                        remote_tokens_used=0
-                    )
-                    
-                result = UnifiedExecutionResult(
-                    text=local_res.text,
-                    source="local",
-                    local_result=local_res,
-                    local_tokens_used=local_tokens,
-                    remote_tokens_used=0,
-                    escalated=False,
-                    trust_report=trust_report
-                )
         else:
             raise ValueError(f"Unknown routing strategy: {routing_strategy}")
 
