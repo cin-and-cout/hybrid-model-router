@@ -77,10 +77,10 @@ graph TD
   - Handle standard prompt formatting and basic response parsing.
 - [x] **Task 1.3: Token & Entropy Extraction**
   - Extract and parse token logprobs and entropy from the local model's API responses (required for the entropy signal).
-- [ ] **Task 1.4: Fireworks AI Remote Client**
+- [x] **Task 1.4: Fireworks AI Remote Client**
   - Implement a remote executor using the Fireworks AI client library.
   - Set up authentication via environment variables and verify token consumption tracking.
-- [ ] **Task 1.5: Unified Executor Interface**
+- [x] **Task 1.5: Unified Executor Interface**
   - Write a high-level router entry point that can direct a task to either the local or remote client based on a routing flag.
 
 ---

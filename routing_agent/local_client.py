@@ -16,6 +16,9 @@ class LocalExecutionResult(BaseModel):
     mean_logprob: float = 0.0
     min_logprob: float = 0.0
     mean_entropy: float = 0.0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
     raw_response: Dict[str, Any] = Field(default_factory=dict)
 
 class LocalClient:
@@ -108,12 +111,20 @@ class LocalClient:
             min_logprob = 0.0
             mean_entropy = 0.0
             
+        usage = data.get("usage", {})
+        prompt_tokens = usage.get("prompt_tokens", 0)
+        completion_tokens = usage.get("completion_tokens", 0)
+        total_tokens = usage.get("total_tokens", 0)
+
         return LocalExecutionResult(
             text=text,
             tokens=token_details,
             mean_logprob=mean_logprob,
             min_logprob=min_logprob,
             mean_entropy=mean_entropy,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            total_tokens=total_tokens,
             raw_response=data
         )
 
