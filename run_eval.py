@@ -24,12 +24,20 @@ def run_evaluation(executor: UnifiedExecutor, dataset: List[Dict[str, Any]], use
         category = task["category"]
         required_keys = task.get("required_keys")
         
+        system_prompt = (
+            "You are a strict, direct QA assistant. Output ONLY the direct answer. "
+            "Do not include conversational filler, markdown formatting (like codeblocks), or explanations. "
+            "If asked for a single number or word, reply with only that number or word. "
+            "If asked for JSON, return ONLY the raw JSON object."
+        )
+        
         try:
             start_time = time.time()
             exec_res = executor.execute(
                 prompt=prompt,
                 use_remote=use_remote,
-                temperature=0.0
+                temperature=0.0,
+                system_prompt=system_prompt
             )
             latency = time.time() - start_time
             
