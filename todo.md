@@ -157,3 +157,30 @@ graph TD
   - Set up structured logs (e.g., JSONL) outputting final decisions, routing signals, latency, and costs for production run diagnostics.
 - [x] **Task 6.3: Code Cleanup & Submission Prep**
   - Clean up experimental scripts, update setup/dependency configurations, and write the final execution instructions.
+
+---
+
+### Phase 7: Hackathon Enhancements (Back-end & Routing) [Stretch Branch]
+*Goal: Implement state-of-the-art routing mechanisms, semantic caches, and advanced similarity metrics.*
+*Depends on all previous phases.*
+
+- [ ] **Task 7.1: Predictive Routing Gate**
+  - Design a lightweight classifier (e.g., embedding-based gate or keyphrase dictionary) to identify highly complex queries before running the local pass, bypassing the local LLM entirely.
+- [ ] **Task 7.2: Semantic Consistency Evaluation**
+  - Replace exact string checks for self-consistency with sentence embedding cosine-similarity calculations.
+- [ ] **Task 7.3: Semantic Cache Layer**
+  - Integrate a vector database (e.g., ChromaDB) or local vector cache to store prompt-response pairs, enabling zero-token returns for high-similarity query repetitions.
+- [ ] **Task 7.4: Multi-Model Cascade**
+  - Extend the router to support multi-tier local and remote model cascades (e.g., Local Small 0.5B -> Local Medium 7B -> Remote Large 70B).
+
+---
+
+### Phase 8: Interactive Performance Dashboard (Front-end) [Final Hackathon Visuals]
+*Goal: Create a visually compelling interactive user interface to showcase the router's advantages in real-time.*
+*Depends on all previous phases.*
+
+- [ ] **Task 8.1: Streamlit Dashboard Implementation**
+  - Build a live web interface presenting a prompt sandbox and real-time visualization of entropy, consistency, and structural signals.
+- [ ] **Task 8.2: Telemetry Metrics Visualizer**
+  - Integrate live counters for dollars and tokens saved compared to a Remote-Only baseline.
+  - Plot a live Pareto frontier curve illustrating the cost-accuracy trade-offs of calibrated thresholds.
