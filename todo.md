@@ -170,7 +170,7 @@ graph TD
   - Replace exact string checks for self-consistency with sentence embedding cosine-similarity calculations.
 - [x] **Task 7.3: Semantic Cache Layer**
   - Integrate a vector database (e.g., ChromaDB) or local vector cache to store prompt-response pairs, enabling zero-token returns for high-similarity query repetitions.
-- [ ] **Task 7.4: Multi-Model Cascade**
+- [x] **Task 7.4: Multi-Model Cascade**
   - Extend the router to support multi-tier local and remote model cascades (e.g., Local Small 0.5B -> Local Medium 7B -> Remote Large 70B).
 
 ---
