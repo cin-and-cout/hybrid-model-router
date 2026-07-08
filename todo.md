@@ -6,14 +6,27 @@ Welcome! This document outlines the development workflow and implementation phas
 
 ## 🛠 Developer & AI Agent Guidelines
 
-To maintain codebase stability and facilitate collaboration, all developers and AI agents must follow this workflow:
+To maintain codebase stability, prevent regressions, and facilitate collaboration, all developers and AI agents must strictly follow these workflow and testing standards:
 
-1. **Branching**: For every new feature or task, create a new branch from `main`. Use a descriptive name:
-   - Feature: `git checkout -b feature/your-feature-name`
-   - Task/Bug: `git checkout -b task/task-description`
-2. **Implementation & Local Testing**: Write the code and run local tests or verification scripts corresponding to your task.
-3. **Verification**: Run the project's evaluation suite (once available) to ensure accuracy is not compromised and token usage is monitored.
-4. **Merge**: Submit a Pull Request or merge into `main` **only** after all tests and verification steps pass successfully.
+### 1. Development Workflow
+* **Branching**: For every new feature or task, create a new branch from `main`. Use a descriptive name:
+  - Feature: `git checkout -b feature/your-feature-name`
+  - Task/Bug: `git checkout -b task/task-description`
+* **Merge**: Submit a Pull Request or merge into `main` **only** after all unit/integration tests and verification steps pass successfully.
+
+### 2. Mandatory Testing Standards
+Every feature or task must be thoroughly tested before merging. Depending on the component, you must implement and run tests using these methods:
+* **Mock-Driven Unit Testing (`pytest` + `unittest.mock`)**:
+  * Never make real LLM or API calls in unit tests. Mock local inference engines (Ollama/llama.cpp) and remote endpoints (Fireworks AI).
+  * Explicitly test behavior under mock exceptions (HTTP errors, timeouts, rate limits) and malformed outputs (empty strings, corrupt JSON).
+* **Contract-Based & Type Safety Validation (`mypy` / `Pydantic`)**:
+  * Ensure all component interfaces strictly adhere to typed data schemas (`Pydantic` or `dataclasses`) to prevent changes in one task from silently breaking down-stream dependencies.
+* **Property-Based Testing (`hypothesis`)**:
+  * For algorithms handling continuous calculations or infinite states (e.g., Phase 5 Adjuster), use property-based testing to automatically generate hundreds of edge-case states and verify safety invariants (e.g., division-by-zero, bounds checking, NaN values).
+* **Golden Regression Suites**:
+  * Run modifications against a fixed, deterministic set of mock tasks to ensure routing decisions do not randomly diverge from baseline expectations.
+* **Chaos Testing**:
+  * For resilience features, run integration tests that randomly inject network flakes/failures and verify the router handles it gracefully without crashing.
 
 ---
 
