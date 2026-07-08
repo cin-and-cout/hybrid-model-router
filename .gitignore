@@ -1,0 +1,7 @@
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/
+*.pyc
+*.pyo
+*.pyd
+eval_results_log.json

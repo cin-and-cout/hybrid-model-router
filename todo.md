@@ -89,11 +89,11 @@ graph TD
 *Goal: Build the testing infrastructure needed to score the router's accuracy and token cost.*
 *This phase is fully independent of Phase 1 and can be developed concurrently.*
 
-- [ ] **Task 2.1: Mini Dataset Curation**
+- [x] **Task 2.1: Mini Dataset Curation**
   - Construct a diverse validation set mimicking expected task categories (e.g., math, code, reasoning, structured output).
-- [ ] **Task 2.2: Evaluator Scorer**
+- [x] **Task 2.2: Evaluator Scorer**
   - Write scoring helpers for exact match, formatting checks (JSON parses), and semantic similarity.
-- [ ] **Task 2.3: Evaluation Run Script**
+- [x] **Task 2.3: Evaluation Run Script**
   - Create a main script that runs the validation set through the local/remote models, aggregates accuracy scores, and logs token usage.
   - Output baseline performance results (Local-Only vs. Remote-Only).
   *Note: Only executing this script requires Phase 1 to be complete.*

@@ -1,0 +1,82 @@
+[
+  {
+    "id": "math_1",
+    "category": "math",
+    "prompt": "Solve for x: 3x - 7 = 14. Answer with just the value of x.",
+    "target": "7"
+  },
+  {
+    "id": "math_2",
+    "category": "math",
+    "prompt": "What is 15 * 6 + 12?",
+    "target": "102"
+  },
+  {
+    "id": "math_3",
+    "category": "math",
+    "prompt": "Calculate the area of a circle with a radius of 5. Use 3.14 for pi. Answer with the numeric value.",
+    "target": "78.5"
+  },
+  {
+    "id": "math_4",
+    "category": "math",
+    "prompt": "What is the remainder when 123456 is divided by 7?",
+    "target": "4"
+  },
+  {
+    "id": "reasoning_1",
+    "category": "reasoning",
+    "prompt": "If John is taller than Jane, and Jane is taller than Sally, who is the shortest?",
+    "target": "Sally"
+  },
+  {
+    "id": "reasoning_2",
+    "category": "reasoning",
+    "prompt": "A drawer contains 6 red socks and 8 blue socks. If you pull socks out one at a time, what is the minimum number of socks you must pull to guarantee a matching pair?",
+    "target": "3"
+  },
+  {
+    "id": "reasoning_3",
+    "category": "reasoning",
+    "prompt": "If all bloops are razzies and all razzies are lazzies, are all bloops lazzies? Answer Yes or No.",
+    "target": "Yes"
+  },
+  {
+    "id": "reasoning_4",
+    "category": "reasoning",
+    "prompt": "A farmer has 17 sheep. All but 9 run away. How many sheep are left?",
+    "target": "9"
+  },
+  {
+    "id": "code_1",
+    "category": "code",
+    "prompt": "Write a python function `is_even(n)` that returns True if n is even and False otherwise. Output only the code block.",
+    "target": "def is_even(n):\n    return n % 2 == 0"
+  },
+  {
+    "id": "code_2",
+    "category": "code",
+    "prompt": "Write a Python line to count occurrences of item `x` in list `lst`. Output only the expression.",
+    "target": "lst.count(x)"
+  },
+  {
+    "id": "code_3",
+    "category": "code",
+    "prompt": "What is the time complexity of searching in a balanced binary search tree (BST)? Answer in Big O notation.",
+    "target": "O(log n)"
+  },
+  {
+    "id": "structured_output_1",
+    "category": "structured_output",
+    "prompt": "Return a JSON object containing keys: 'capital' and 'population' for the country France.",
+    "target": "{\"capital\": \"Paris\", \"population\": 67000000}",
+    "required_keys": ["capital", "population"]
+  },
+  {
+    "id": "structured_output_2",
+    "category": "structured_output",
+    "prompt": "Output a valid JSON representing a user with keys 'name', 'age', and 'roles'. 'roles' should be a list containing 'admin'.",
+    "target": "{\"name\": \"Alice\", \"age\": 30, \"roles\": [\"admin\"]}",
+    "required_keys": ["name", "age", "roles"]
+  }
+]
