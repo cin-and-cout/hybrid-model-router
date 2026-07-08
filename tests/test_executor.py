@@ -4,6 +4,7 @@ from routing_agent.executor import UnifiedExecutor, UnifiedExecutionResult
 from routing_agent.local_client import LocalClient, LocalExecutionResult
 from routing_agent.remote_client import RemoteClient, RemoteExecutionResult
 from routing_agent.evaluator import TrustEvaluator
+from routing_agent.adjuster import BudgetAwareAdjuster
 
 def test_unified_executor_route_local():
     mock_local = MagicMock(spec=LocalClient)
@@ -149,3 +150,56 @@ def test_unified_executor_dynamic_escalate():
     mock_local.query.assert_called_once()
     mock_evaluator.evaluate_trust.assert_called_once()
     mock_remote.query.assert_called_once()
+
+def test_unified_executor_adaptive():
+    mock_local = MagicMock(spec=LocalClient)
+    mock_remote = MagicMock(spec=RemoteClient)
+    mock_evaluator = MagicMock(spec=TrustEvaluator)
+    mock_adjuster = MagicMock(spec=BudgetAwareAdjuster)
+    
+    mock_local.query.return_value = LocalExecutionResult(
+        text="local answer",
+        total_tokens=10,
+        raw_response={}
+    )
+    
+    mock_evaluator.evaluate_trust.return_value = {
+        "escalate": False,
+        "signals": {"structural_valid": True, "mean_entropy": 0.2, "self_consistency": 1.0},
+        "failures": {"structural": False, "entropy": False, "consistency": False},
+        "consistency_tokens": 15
+    }
+    
+    mock_adjuster.get_adjusted_thresholds.return_value = {
+        "consistency_threshold": 0.3,
+        "entropy_threshold": 0.9
+    }
+    
+    executor = UnifiedExecutor(
+        local_client=mock_local,
+        remote_client=mock_remote,
+        trust_evaluator=mock_evaluator,
+        budget_adjuster=mock_adjuster
+    )
+    
+    result = executor.execute(
+        prompt="Solve arithmetic",
+        routing_strategy="adaptive",
+        category="math"
+    )
+    
+    assert result.source == "local"
+    assert result.local_tokens_used == 25
+    assert result.remote_tokens_used == 0
+    assert result.escalated is False
+    
+    mock_adjuster.get_adjusted_thresholds.assert_called_once_with("math")
+    mock_adjuster.register_task_completed.assert_called_once_with(
+        category="math",
+        local_text="local answer",
+        remote_text=None,
+        remote_tokens_used=0
+    )
+    
+    assert mock_evaluator.consistency_threshold == 0.3
+    assert mock_evaluator.entropy_threshold == 0.9

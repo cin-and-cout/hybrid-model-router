@@ -7,6 +7,7 @@ from routing_agent.executor import UnifiedExecutor
 from routing_agent.remote_client import RemoteClient, RemoteExecutionResult
 from routing_agent.local_client import LocalClient, LocalExecutionResult
 from routing_agent.scorer import evaluate_task
+from routing_agent.adjuster import BudgetAwareAdjuster
 
 class CachedLocalClient:
     """
@@ -64,7 +65,9 @@ def run_evaluation(
     escalated_count = 0
     
     if routing_strategy == "dynamic":
-        mode_name = "Hybrid-Calibrated-Router"
+        mode_name = "Hybrid-Calibrated-Router (v1)"
+    elif routing_strategy == "adaptive":
+        mode_name = "Adaptive-Router (v2)"
     else:
         mode_name = "Remote-Only" if use_remote else "Local-Only"
         
@@ -72,7 +75,7 @@ def run_evaluation(
     
     has_remote_key = bool(os.environ.get("FIREWORKS_API_KEY"))
     mock_remote = None
-    if not has_remote_key and (use_remote or routing_strategy == "dynamic"):
+    if not has_remote_key and (use_remote or routing_strategy in ("dynamic", "adaptive")):
         mock_remote = MagicMock(spec=RemoteClient)
         executor.remote_client = mock_remote
         
@@ -183,8 +186,21 @@ def main():
     # Run Local-Only Baseline
     local_baseline = run_evaluation(executor, dataset, routing_strategy="static", use_remote=False, cached_local=cached_local)
     
-    # Run Hybrid Calibrated Router
+    # Run Hybrid Calibrated Router (v1)
     hybrid_run = run_evaluation(executor, dataset, routing_strategy="dynamic", cached_local=cached_local)
+    
+    # Run Adaptive Router (v2)
+    adjuster = BudgetAwareAdjuster(
+        total_tasks=len(dataset),
+        total_allowed_remote_tokens=450,  # Match hybrid run token limit
+        base_consistency_threshold=0.40,
+        base_entropy_threshold=0.80
+    )
+    executor_adaptive = UnifiedExecutor(budget_adjuster=adjuster)
+    executor_adaptive.local_client = cached_local
+    executor_adaptive.trust_evaluator.local_client = cached_local
+    
+    adaptive_run = run_evaluation(executor_adaptive, dataset, routing_strategy="adaptive", cached_local=cached_local)
     
     # Run Remote-Only Baseline (if API key is available or in simulation mode)
     remote_baseline = run_evaluation(executor, dataset, routing_strategy="static", use_remote=True, cached_local=cached_local)
@@ -202,14 +218,21 @@ def main():
     print(f"  Escalation Rate:       {local_baseline['escalation_rate'] * 100:.2f}%")
     
     print("-"*80)
-    print(f"2. Hybrid Calibrated Router:")
+    print(f"2. Hybrid Calibrated Router (v1):")
     print(f"  Average Accuracy:      {hybrid_run['avg_accuracy'] * 100:.2f}%")
     print(f"  Total Local Tokens:    {hybrid_run['total_local_tokens']}")
     print(f"  Total Remote Tokens:   {hybrid_run['total_remote_tokens']}")
     print(f"  Escalation Rate:       {hybrid_run['escalation_rate'] * 100:.2f}%")
     
     print("-"*80)
-    print(f"3. Remote-Only Baseline:")
+    print(f"3. Adaptive Router (v2 Stretch Goal):")
+    print(f"  Average Accuracy:      {adaptive_run['avg_accuracy'] * 100:.2f}%")
+    print(f"  Total Local Tokens:    {adaptive_run['total_local_tokens']}")
+    print(f"  Total Remote Tokens:   {adaptive_run['total_remote_tokens']}")
+    print(f"  Escalation Rate:       {adaptive_run['escalation_rate'] * 100:.2f}%")
+    
+    print("-"*80)
+    print(f"4. Remote-Only Baseline:")
     print(f"  Average Accuracy:      {remote_baseline['avg_accuracy'] * 100:.2f}%")
     print(f"  Total Local Tokens:    {remote_baseline['total_local_tokens']}")
     print(f"  Total Remote Tokens:   {remote_baseline['total_remote_tokens']}")
@@ -222,6 +245,7 @@ def main():
         "timestamp": time.time(),
         "local_baseline": local_baseline,
         "hybrid_run": hybrid_run,
+        "adaptive_run": adaptive_run,
         "remote_baseline": remote_baseline
     }
     with open("eval_results_log.json", "w") as f:

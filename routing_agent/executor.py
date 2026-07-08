@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from routing_agent.local_client import LocalClient, LocalExecutionResult
 from routing_agent.remote_client import RemoteClient, RemoteExecutionResult
 from routing_agent.evaluator import TrustEvaluator
+from routing_agent.adjuster import BudgetAwareAdjuster
 
 class UnifiedExecutionResult(BaseModel):
     text: str
@@ -23,11 +24,13 @@ class UnifiedExecutor:
         self, 
         local_client: Optional[LocalClient] = None, 
         remote_client: Optional[RemoteClient] = None,
-        trust_evaluator: Optional[TrustEvaluator] = None
+        trust_evaluator: Optional[TrustEvaluator] = None,
+        budget_adjuster: Optional[BudgetAwareAdjuster] = None
     ):
         self.local_client = local_client or LocalClient()
         self.remote_client = remote_client or RemoteClient()
         self.trust_evaluator = trust_evaluator or TrustEvaluator(local_client=self.local_client)
+        self.budget_adjuster = budget_adjuster
 
     def execute(
         self,
@@ -42,7 +45,7 @@ class UnifiedExecutor:
     ) -> UnifiedExecutionResult:
         """
         Executes the prompt by routing it to either the local or remote client.
-        Supports both static and dynamic routing strategies.
+        Supports static, dynamic, and adaptive routing strategies.
         """
         if routing_strategy == "static":
             is_remote = use_remote if use_remote is not None else False
@@ -76,9 +79,18 @@ class UnifiedExecutor:
                     remote_tokens_used=0,
                     escalated=False
                 )
-        elif routing_strategy == "dynamic":
+                
+        elif routing_strategy in ("dynamic", "adaptive"):
             if not category:
-                raise ValueError("Category must be provided for dynamic routing.")
+                raise ValueError(f"Category must be provided for {routing_strategy} routing.")
+                
+            # If adaptive, dynamically adjust thresholds first
+            if routing_strategy == "adaptive":
+                if not self.budget_adjuster:
+                    raise ValueError("budget_adjuster must be initialized for adaptive strategy.")
+                adjusted = self.budget_adjuster.get_adjusted_thresholds(category)
+                self.trust_evaluator.consistency_threshold = adjusted["consistency_threshold"]
+                self.trust_evaluator.entropy_threshold = adjusted["entropy_threshold"]
                 
             # 1. Run local pass at temperature 0
             local_res = self.local_client.query(
@@ -107,6 +119,16 @@ class UnifiedExecutor:
                     max_tokens=max_tokens,
                     system_prompt=system_prompt
                 )
+                
+                # Update adjuster if present
+                if routing_strategy == "adaptive" and self.budget_adjuster:
+                    self.budget_adjuster.register_task_completed(
+                        category=category,
+                        local_text=local_res.text,
+                        remote_text=remote_res.text,
+                        remote_tokens_used=remote_res.total_tokens
+                    )
+                    
                 return UnifiedExecutionResult(
                     text=remote_res.text,
                     source="remote",
@@ -119,6 +141,15 @@ class UnifiedExecutor:
                 )
             else:
                 # 4. Return local answer
+                # Update adjuster if present
+                if routing_strategy == "adaptive" and self.budget_adjuster:
+                    self.budget_adjuster.register_task_completed(
+                        category=category,
+                        local_text=local_res.text,
+                        remote_text=None,
+                        remote_tokens_used=0
+                    )
+                    
                 return UnifiedExecutionResult(
                     text=local_res.text,
                     source="local",
