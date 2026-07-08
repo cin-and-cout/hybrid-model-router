@@ -164,7 +164,7 @@ graph TD
 *Goal: Implement state-of-the-art routing mechanisms, semantic caches, and advanced similarity metrics.*
 *Depends on all previous phases.*
 
-- [ ] **Task 7.1: Predictive Routing Gate**
+- [x] **Task 7.1: Predictive Routing Gate**
   - Design a lightweight classifier (e.g., embedding-based gate or keyphrase dictionary) to identify highly complex queries before running the local pass, bypassing the local LLM entirely.
 - [ ] **Task 7.2: Semantic Consistency Evaluation**
   - Replace exact string checks for self-consistency with sentence embedding cosine-similarity calculations.
