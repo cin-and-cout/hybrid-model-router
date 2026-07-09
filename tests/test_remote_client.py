@@ -9,8 +9,36 @@ def test_remote_client_missing_api_key():
         with pytest.raises(ValueError, match="FIREWORKS_API_KEY environment variable is not set"):
             _ = client.client
 
+def test_remote_client_provider_detection():
+    # Detect OpenAI
+    client_oa = RemoteClient(api_key="key", model="gpt-4o")
+    assert client_oa.provider == "openai"
+    
+    # Detect Gemini
+    client_gem = RemoteClient(api_key="key", model="gemini-1.5-flash")
+    assert client_gem.provider == "gemini"
+    
+    # Detect Fireworks (default)
+    client_fw = RemoteClient(api_key="key", model="accounts/fireworks/models/llama-v3p1-70b-instruct")
+    assert client_fw.provider == "fireworks"
+
+@patch("routing_agent.remote_client.OpenAI")
+def test_openai_client_initialization(mock_openai):
+    client = RemoteClient(api_key="test-openai-key", model="gpt-4o")
+    # Access client property to trigger initialization
+    _ = client.client
+    mock_openai.assert_called_once_with(api_key="test-openai-key")
+
+@patch("routing_agent.remote_client.OpenAI")
+def test_gemini_client_initialization(mock_openai):
+    client = RemoteClient(api_key="test-gemini-key", model="gemini-1.5-pro")
+    _ = client.client
+    mock_openai.assert_called_once_with(
+        api_key="test-gemini-key",
+        base_url="https://generativelanguage.googleapis.com/v1beta/"
+    )
+
 def test_remote_client_query_success(mocker):
-    # Mocking completion return object
     class MockUsage:
         def __init__(self):
             self.prompt_tokens = 15

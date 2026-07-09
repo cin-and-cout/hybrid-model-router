@@ -12,8 +12,8 @@ class TrustEvaluator:
     def __init__(
         self, 
         local_client: Optional[LocalClient] = None,
-        consistency_threshold: float = 0.6,
-        entropy_threshold: float = 0.8,
+        consistency_threshold: Optional[float] = None,
+        entropy_threshold: Optional[float] = None,
         consistency_n: int = 3,
         consistency_temp: float = 0.7
     ):
@@ -23,6 +23,9 @@ class TrustEvaluator:
         self.last_consistency_tokens = 0
         
         # Load calibrated thresholds if available
+        config_consistency = None
+        config_entropy = None
+        
         import os
         import json
         config_path = "routing_config.json"
@@ -30,13 +33,19 @@ class TrustEvaluator:
             try:
                 with open(config_path, "r") as f:
                     config = json.load(f)
-                    consistency_threshold = config.get("consistency_threshold", consistency_threshold)
-                    entropy_threshold = config.get("entropy_threshold", entropy_threshold)
+                    config_consistency = config.get("consistency_threshold")
+                    config_entropy = config.get("entropy_threshold")
             except Exception:
                 pass
                 
-        self.consistency_threshold = consistency_threshold
-        self.entropy_threshold = entropy_threshold
+        self.consistency_threshold = (
+            consistency_threshold if consistency_threshold is not None else
+            (config_consistency if config_consistency is not None else 0.6)
+        )
+        self.entropy_threshold = (
+            entropy_threshold if entropy_threshold is not None else
+            (config_entropy if config_entropy is not None else 0.8)
+        )
 
     def compute_self_consistency(
         self,

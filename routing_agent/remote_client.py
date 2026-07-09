@@ -8,6 +8,11 @@ try:
 except ImportError:
     Fireworks = None
 
+try:
+    from openai import OpenAI
+except ImportError:
+    OpenAI = None
+
 class RemoteExecutionResult(BaseModel):
     text: str
     prompt_tokens: int = 0
@@ -17,22 +22,34 @@ class RemoteExecutionResult(BaseModel):
 
 class RemoteClient:
     """
-    Client for querying the remote Fireworks AI chat completions API,
+    Client for querying remote chat completion APIs (OpenAI, Gemini, Fireworks),
     with explicit tracking of token consumption.
     """
     def __init__(
         self, 
         api_key: Optional[str] = None, 
-        model: str = "accounts/fireworks/models/llama-v3p1-70b-instruct"
+        model: str = "accounts/fireworks/models/llama-v3p1-70b-instruct",
+        provider: Optional[str] = None
     ):
-        # Resolve the API key from argument or environment variable
-        self.api_key = api_key or os.environ.get("FIREWORKS_API_KEY")
         self.model = model
         
-        if not self.api_key:
-            # We don't raise immediately during initialization so we can instantiate the class
-            # in tests or when mocking, but we will check it before making a live request.
-            pass
+        # Auto-detect provider
+        if provider:
+            self.provider = provider.lower()
+        elif "gpt" in model or "text-davinci" in model or "o1-" in model:
+            self.provider = "openai"
+        elif "gemini" in model:
+            self.provider = "gemini"
+        else:
+            self.provider = "fireworks"
+            
+        # Resolve the API key based on the provider
+        if self.provider == "openai":
+            self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
+        elif self.provider == "gemini":
+            self.api_key = api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        else:
+            self.api_key = api_key or os.environ.get("FIREWORKS_API_KEY")
             
         self._client = None
 
@@ -40,14 +57,35 @@ class RemoteClient:
     def client(self):
         if self._client is None:
             if not self.api_key:
-                raise ValueError(
-                    "FIREWORKS_API_KEY environment variable is not set and no API key was provided."
-                )
-            if Fireworks is None:
+                if self.provider == "fireworks":
+                    raise ValueError(
+                        "FIREWORKS_API_KEY environment variable is not set and no API key was provided."
+                    )
+                else:
+                    raise ValueError(
+                        f"API key for provider '{self.provider}' is not set. Please provide it or set the environment variable."
+                    )
+            
+            if OpenAI is None:
                 raise ImportError(
-                    "The 'fireworks-ai' package is not installed or could not be imported."
+                    "The 'openai' package is not installed or could not be imported."
                 )
-            self._client = Fireworks(api_key=self.api_key)
+            if self.provider == "gemini":
+                # Gemini OpenAI compatibility endpoint
+                self._client = OpenAI(
+                    api_key=self.api_key,
+                    base_url="https://generativelanguage.googleapis.com/v1beta/"
+                )
+            elif self.provider == "fireworks":
+                if Fireworks is not None:
+                    self._client = Fireworks(api_key=self.api_key)
+                else:
+                    self._client = OpenAI(
+                        api_key=self.api_key,
+                        base_url="https://api.fireworks.ai/inference/v1"
+                    )
+            else:
+                self._client = OpenAI(api_key=self.api_key)
         return self._client
 
     def query(
