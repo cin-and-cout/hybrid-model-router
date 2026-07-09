@@ -18,6 +18,10 @@ def test_remote_client_provider_detection():
     client_gem = RemoteClient(api_key="key", model="gemini-1.5-flash")
     assert client_gem.provider == "gemini"
     
+    # Detect Groq
+    client_groq = RemoteClient(api_key="key", model="groq-llama-3")
+    assert client_groq.provider == "groq"
+    
     # Detect Fireworks (default)
     client_fw = RemoteClient(api_key="key", model="accounts/fireworks/models/llama-v3p1-70b-instruct")
     assert client_fw.provider == "fireworks"
@@ -36,6 +40,15 @@ def test_gemini_client_initialization(mock_openai):
     mock_openai.assert_called_once_with(
         api_key="test-gemini-key",
         base_url="https://generativelanguage.googleapis.com/v1beta/"
+    )
+
+@patch("routing_agent.remote_client.OpenAI")
+def test_groq_client_initialization(mock_openai):
+    client = RemoteClient(api_key="test-groq-key", model="groq-llama-3")
+    _ = client.client
+    mock_openai.assert_called_once_with(
+        api_key="test-groq-key",
+        base_url="https://api.groq.com/openai/v1"
     )
 
 def test_remote_client_query_success(mocker):

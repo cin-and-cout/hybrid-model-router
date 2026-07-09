@@ -91,7 +91,7 @@ The `BudgetAwareAdjuster` tracks token burn rates and budget consumption.
 
 ### Prerequisites
 * **Docker** and **Docker Compose** installed.
-* An API Key for your remote model provider (Fireworks AI, OpenAI, or Google Gemini).
+* An API Key for your remote model provider (Fireworks AI, OpenAI, Google Gemini, or Groq).
 
 ### Configuration
 Create a `.env` file in the root directory by copying the example environment file:
@@ -102,6 +102,7 @@ Open `.env` and fill in the API key corresponding to the remote provider you pla
 * **Fireworks AI:** Set `FIREWORKS_API_KEY` (default remote model provider).
 * **OpenAI:** Set `OPENAI_API_KEY` (if routing to GPT models).
 * **Google Gemini:** Set `GEMINI_API_KEY` or `GOOGLE_API_KEY` (if routing to Gemini models).
+* **Groq:** Set `GROQ_API_KEY` (if routing to Groq models).
 
 *Note: If no API keys are provided, the evaluation/benchmark suite will automatically fall back to **simulation mode**, running mock inferences with zero costs.*
 

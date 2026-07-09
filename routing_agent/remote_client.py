@@ -40,6 +40,8 @@ class RemoteClient:
             self.provider = "openai"
         elif "gemini" in model:
             self.provider = "gemini"
+        elif "groq" in model:
+            self.provider = "groq"
         else:
             self.provider = "fireworks"
             
@@ -48,6 +50,8 @@ class RemoteClient:
             self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
         elif self.provider == "gemini":
             self.api_key = api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        elif self.provider == "groq":
+            self.api_key = api_key or os.environ.get("GROQ_API_KEY")
         else:
             self.api_key = api_key or os.environ.get("FIREWORKS_API_KEY")
             
@@ -75,6 +79,12 @@ class RemoteClient:
                 self._client = OpenAI(
                     api_key=self.api_key,
                     base_url="https://generativelanguage.googleapis.com/v1beta/"
+                )
+            elif self.provider == "groq":
+                # Groq OpenAI compatibility endpoint
+                self._client = OpenAI(
+                    api_key=self.api_key,
+                    base_url="https://api.groq.com/openai/v1"
                 )
             elif self.provider == "fireworks":
                 if Fireworks is not None:
