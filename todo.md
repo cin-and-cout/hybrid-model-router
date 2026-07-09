@@ -172,6 +172,8 @@ graph TD
   - Integrate a vector database (e.g., ChromaDB) or local vector cache to store prompt-response pairs, enabling zero-token returns for high-similarity query repetitions.
 - [x] **Task 7.4: Multi-Model Cascade**
   - Extend the router to support multi-tier local and remote model cascades (e.g., Local Small 0.5B -> Local Medium 7B -> Remote Large 70B).
+- [x] **Task 7.5: Multi-Provider Remote Client Support**
+  - Expand RemoteClient to automatically detect and support OpenAI (GPT models) and Google Gemini endpoints (via OpenAI-compatible API base URL) alongside Fireworks AI.
 
 ---
 
