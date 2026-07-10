@@ -20,6 +20,12 @@ export default function App() {
   // Settings & config
   const [config, setConfig] = useState({ consistency_threshold: 0.4, entropy_threshold: 0.8 });
   const [saveLoading, setSaveLoading] = useState(false);
+  const [notification, setNotification] = useState(null);
+
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 4000);
+  };
   
   // Execution status
   const [execLoading, setExecLoading] = useState(false);
@@ -93,10 +99,12 @@ export default function App() {
         body: JSON.stringify(config)
       });
       if (res.ok) {
-        alert("Threshold parameters calibrated successfully!");
+        showNotification("Threshold parameters calibrated successfully!", "success");
+      } else {
+        throw new Error("Server returned status " + res.status);
       }
     } catch (err) {
-      alert("Failed to save config: " + err.message);
+      showNotification("Failed to save config: " + err.message, "error");
     } finally {
       setSaveLoading(false);
     }
@@ -187,6 +195,37 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
+      {/* Floating Notification Toast */}
+      {notification && (
+        <div style={{
+          position: 'fixed',
+          top: '24px',
+          right: '24px',
+          backgroundColor: notification.type === 'success' ? '#ecfdf5' : '#fef2f2',
+          border: '1px solid ' + (notification.type === 'success' ? '#10b981' : '#f87171'),
+          borderRadius: '8px',
+          padding: '16px 20px',
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          zIndex: 9999,
+          animation: 'slideDown 0.3s ease-out'
+        }}>
+          {notification.type === 'success' ? (
+            <CheckCircle size={20} color="#10b981" />
+          ) : (
+            <AlertTriangle size={20} color="#ef4444" />
+          )}
+          <span style={{ 
+            fontSize: '14px', 
+            fontWeight: '600', 
+            color: notification.type === 'success' ? '#065f46' : '#991b1b' 
+          }}>
+            {notification.message}
+          </span>
+        </div>
+      )}
       {/* Sidebar Navigation */}
       <div style={{ 
         width: '260px', 
