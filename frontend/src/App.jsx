@@ -146,33 +146,63 @@ export default function App() {
 
       const steps = [];
       const isCache = data.source.toLowerCase().includes('cache');
+      const isFallback = data.source.toLowerCase().includes('fallback');
       
       if (isCache) {
         steps.push({ id: 'cache', status: 'success', label: 'Semantic Cache Hit! Returning response immediately.' });
       } else {
-        steps.push({ id: 'cache', status: 'miss', label: 'Semantic Cache Miss. Proceeding to classification...' });
+        steps.push({ id: 'cache', status: 'miss', label: 'Semantic Cache Miss. Proceeding to routing logic...' });
         
-        // Step 2: Predictive Gate
-        const bypassed = data.source.toLowerCase().includes('bypass');
-        if (bypassed) {
-          steps.push({ id: 'gate', status: 'escalated', label: 'Predictive Gate: Complex prompt detected. Bypassing local pass.' });
-        } else {
-          steps.push({ id: 'gate', status: 'success', label: 'Predictive Gate: Prompt allowed for local execution.' });
-          
-          // Step 3: Local LLM Execution
-          steps.push({ id: 'local', status: 'success', label: `Local Pass (Qwen 0.5B): Completion generated (${data.local_tokens} tokens).` });
-          
-          // Step 4: Trust Evaluator Signals
-          if (data.escalated) {
-            steps.push({ id: 'trust', status: 'failed', label: 'Trust Evaluator: Entropy or self-consistency check failed.' });
+        const isStatic = data.routing_strategy && data.routing_strategy.startsWith('static');
+        
+        if (isStatic) {
+          if (data.source.toLowerCase().includes('local')) {
+            steps.push({ id: 'local', status: 'success', label: `Static Routing: Resolved directly via local model (${data.local_tokens} tokens).` });
           } else {
-            steps.push({ id: 'trust', status: 'success', label: 'Trust Evaluator: Confidence signals verified. Satisfied locally.' });
+            steps.push({ id: 'remote', status: 'success', label: `Static Routing: Resolved directly via remote model (${data.remote_tokens} tokens).` });
           }
-        }
-
-        // Step 5: Escalation
-        if (data.escalated || bypassed) {
-          steps.push({ id: 'remote', status: 'success', label: `Escalated to Remote LLM: Answer resolved via provider (${data.remote_tokens} tokens).` });
+        } else {
+          // Dynamic or Adaptive Routing
+          const bypassed = (data.trust_report && data.trust_report.predictive_bypass) || data.source.toLowerCase().includes('bypass');
+          
+          if (bypassed) {
+            steps.push({ id: 'gate', status: 'escalated', label: 'Predictive Gate: Complex prompt detected. Bypassing local pass.' });
+            steps.push({ id: 'remote', status: 'success', label: `Escalated to Remote LLM: Answer resolved via provider (${data.remote_tokens} tokens).` });
+          } else {
+            steps.push({ id: 'gate', status: 'success', label: 'Predictive Gate: Prompt allowed for local execution.' });
+            steps.push({ id: 'local', status: 'success', label: `Local Pass (Qwen 0.5B): Completion generated (${data.local_tokens} tokens).` });
+            
+            if (isFallback) {
+              let failMsg = "Trust Evaluator: Confidence signals check failed.";
+              if (data.trust_report && data.trust_report.failures) {
+                const fails = [];
+                if (data.trust_report.failures.consistency) fails.push("Self-Consistency");
+                if (data.trust_report.failures.entropy) fails.push("Token Entropy");
+                if (data.trust_report.failures.structural) fails.push("Structure Validation");
+                if (fails.length > 0) {
+                  failMsg = `Trust Evaluator: ${fails.join(" & ")} check failed.`;
+                }
+              }
+              steps.push({ id: 'trust', status: 'failed', label: failMsg });
+              steps.push({ id: 'remote', status: 'failed', label: 'Remote LLM Call Failed! Outage or network timeout.' });
+              steps.push({ id: 'local', status: 'success', label: 'Local Fallback: Reverted safely to the high-confidence local response.' });
+            } else if (data.escalated) {
+              let failMsg = "Trust Evaluator: Confidence signals check failed.";
+              if (data.trust_report && data.trust_report.failures) {
+                const fails = [];
+                if (data.trust_report.failures.consistency) fails.push("Self-Consistency");
+                if (data.trust_report.failures.entropy) fails.push("Token Entropy");
+                if (data.trust_report.failures.structural) fails.push("Structure Validation");
+                if (fails.length > 0) {
+                  failMsg = `Trust Evaluator: ${fails.join(" & ")} check failed.`;
+                }
+              }
+              steps.push({ id: 'trust', status: 'failed', label: failMsg });
+              steps.push({ id: 'remote', status: 'success', label: `Escalated to Remote LLM: Answer resolved via provider (${data.remote_tokens} tokens).` });
+            } else {
+              steps.push({ id: 'trust', status: 'success', label: 'Trust Evaluator: Confidence signals verified. Satisfied locally.' });
+            }
+          }
         }
       }
 

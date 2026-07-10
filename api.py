@@ -63,7 +63,9 @@ async def route_prompt(req: RouteRequest):
             "latency": round(latency, 3),
             "local_tokens": res.local_tokens_used,
             "remote_tokens": res.remote_tokens_used,
-            "escalated": res.escalated
+            "escalated": res.escalated,
+            "trust_report": res.trust_report,
+            "routing_strategy": req.routing_strategy
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
