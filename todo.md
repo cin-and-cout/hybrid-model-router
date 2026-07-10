@@ -181,7 +181,7 @@ graph TD
 *Goal: Create a visually compelling interactive user interface to showcase the router's advantages in real-time.*
 *Depends on all previous phases.*
 
-- [x] **Task 8.1: Streamlit Dashboard Implementation**
+- [x] **Task 8.1: React Dashboard Implementation**
   - Build a live web interface presenting a prompt sandbox and real-time visualization of entropy, consistency, and structural signals.
 - [x] **Task 8.2: Telemetry Metrics Visualizer**
   - Integrate live counters for dollars and tokens saved compared to a Remote-Only baseline.

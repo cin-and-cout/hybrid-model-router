@@ -121,7 +121,6 @@ The project includes a `Makefile` to simplify command executions:
 | `make test` | Runs the full unit test suite (38+ tests) inside the Docker container. |
 | `make eval` | Runs the benchmark evaluation comparing routing strategies. |
 | `make optimize` | Sweeps the threshold parameter space to calibrate optimal baselines. |
-| `make dashboard` | Runs the Streamlit interactive dashboard UI at http://localhost:8501. |
 | `make clean` | Removes compiled Python caches and temporary log files. |
 
 ---

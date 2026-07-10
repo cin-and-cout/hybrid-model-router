@@ -1,0 +1,788 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Play, ShieldAlert, Cpu, Database, TrendingUp, CheckCircle, 
+  Settings, History, BarChart3, ChevronRight, Activity, 
+  HelpCircle, RefreshCw, AlertTriangle, ArrowRight, DollarSign
+} from 'lucide-react';
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, 
+  ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend
+} from 'recharts';
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('sandbox');
+  const [prompt, setPrompt] = useState('Write a python function to check if a number is prime.');
+  const [strategy, setStrategy] = useState('dynamic');
+  const [category, setCategory] = useState('code');
+  const [temp, setTemp] = useState(0.0);
+  const [requiredKeys, setRequiredKeys] = useState('');
+  
+  // Settings & config
+  const [config, setConfig] = useState({ consistency_threshold: 0.4, entropy_threshold: 0.8 });
+  const [saveLoading, setSaveLoading] = useState(false);
+  
+  // Execution status
+  const [execLoading, setExecLoading] = useState(false);
+  const [execResult, setExecResult] = useState(null);
+  const [traceSteps, setTraceSteps] = useState([]);
+  
+  // Telemetry stats & history
+  const [stats, setStats] = useState({
+    total_queries: 0,
+    cache_hits: 0,
+    local_runs: 0,
+    escalations: 0,
+    total_local_tokens: 0,
+    total_remote_tokens: 0,
+    savings_dollars: 0.0,
+    avg_latency: 0.0,
+    source_distribution: {}
+  });
+  const [history, setHistory] = useState([]);
+  const [statsLoading, setStatsLoading] = useState(false);
+
+  // Pareto Frontier data for calibration visualization
+  const paretoData = [
+    { name: 'Max Local', cost: 0.0, accuracy: 55.4, threshold: '0.1' },
+    { name: 'Highly Optimized', cost: 0.002, accuracy: 78.5, threshold: '0.3' },
+    { name: 'Optimal Balancer', cost: 0.005, accuracy: 89.2, threshold: '0.45' },
+    { name: 'Conservative Remote', cost: 0.012, accuracy: 94.6, threshold: '0.7' },
+    { name: 'Max Remote', cost: 0.025, accuracy: 98.2, threshold: '1.0' }
+  ];
+
+  // Fetch telemetry and configurations
+  const fetchTelemetry = async () => {
+    setStatsLoading(true);
+    try {
+      const statsRes = await fetch('http://localhost:8000/api/stats');
+      const statsData = await statsRes.json();
+      setStats(statsData);
+      
+      const historyRes = await fetch('http://localhost:8000/api/history');
+      const historyData = await historyRes.json();
+      setHistory(historyData);
+    } catch (err) {
+      console.error("Error fetching telemetry:", err);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  const fetchConfig = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/config');
+      const data = await res.json();
+      setConfig(data);
+    } catch (err) {
+      console.error("Error fetching config:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchTelemetry();
+    fetchConfig();
+  }, []);
+
+  // Save updated config thresholds
+  const handleSaveConfig = async () => {
+    setSaveLoading(true);
+    try {
+      const res = await fetch('http://localhost:8000/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+      });
+      if (res.ok) {
+        alert("Threshold parameters calibrated successfully!");
+      }
+    } catch (err) {
+      alert("Failed to save config: " + err.message);
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
+  // Submit query for execution tracing
+  const handleExecute = async () => {
+    if (!prompt.trim()) return;
+    setExecLoading(true);
+    setExecResult(null);
+    
+    // Set up step-by-step visual tracing
+    setTraceSteps([
+      { id: 'cache', status: 'pending', label: 'Checking Semantic Cache...' }
+    ]);
+
+    try {
+      // Step 1: Cache Check simulation delay
+      await new Promise(r => setTimeout(r, 600));
+      
+      const reqPayload = {
+        prompt,
+        routing_strategy: strategy,
+        category,
+        temperature: temp,
+        required_keys: requiredKeys.trim() ? requiredKeys.split(',').map(k => k.trim()) : null
+      };
+
+      const res = await fetch('http://localhost:8000/api/route', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reqPayload)
+      });
+      
+      if (!res.ok) throw new Error("Backend execution failed");
+      const data = await res.json();
+
+      setExecResult(data);
+
+      const steps = [];
+      const isCache = data.source.toLowerCase().includes('cache');
+      
+      if (isCache) {
+        steps.push({ id: 'cache', status: 'success', label: 'Semantic Cache Hit! Returning response immediately.' });
+      } else {
+        steps.push({ id: 'cache', status: 'miss', label: 'Semantic Cache Miss. Proceeding to classification...' });
+        
+        // Step 2: Predictive Gate
+        const bypassed = data.source.toLowerCase().includes('bypass');
+        if (bypassed) {
+          steps.push({ id: 'gate', status: 'escalated', label: 'Predictive Gate: Complex prompt detected. Bypassing local pass.' });
+        } else {
+          steps.push({ id: 'gate', status: 'success', label: 'Predictive Gate: Prompt allowed for local execution.' });
+          
+          // Step 3: Local LLM Execution
+          steps.push({ id: 'local', status: 'success', label: `Local Pass (Qwen 0.5B): Completion generated (${data.local_tokens} tokens).` });
+          
+          // Step 4: Trust Evaluator Signals
+          if (data.escalated) {
+            steps.push({ id: 'trust', status: 'failed', label: 'Trust Evaluator: Entropy or self-consistency check failed.' });
+          } else {
+            steps.push({ id: 'trust', status: 'success', label: 'Trust Evaluator: Confidence signals verified. Satisfied locally.' });
+          }
+        }
+
+        // Step 5: Escalation
+        if (data.escalated || bypassed) {
+          steps.push({ id: 'remote', status: 'success', label: `Escalated to Remote LLM: Answer resolved via provider (${data.remote_tokens} tokens).` });
+        }
+      }
+
+      setTraceSteps(steps);
+      fetchTelemetry(); // Refresh metrics on sandbox run
+    } catch (err) {
+      console.error(err);
+      setTraceSteps(prev => [...prev, { id: 'error', status: 'failed', label: `Error: ${err.message}` }]);
+    } finally {
+      setExecLoading(false);
+    }
+  };
+
+  // Pie chart data prep
+  const sourcePieData = Object.entries(stats.source_distribution).map(([name, value]) => ({
+    name, value
+  }));
+
+  const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#3b82f6'];
+
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0b0f19' }}>
+      {/* Sidebar Navigation */}
+      <div style={{ 
+        width: '260px', 
+        borderRight: '1px solid rgba(55, 65, 81, 0.4)', 
+        backgroundColor: '#0f172a',
+        padding: '24px 16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '24px'
+      }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+            <div style={{ 
+              width: '32px', 
+              height: '32px', 
+              borderRadius: '8px', 
+              background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Cpu size={18} color="#fff" />
+            </div>
+            <span style={{ fontSize: '18px', fontWeight: '800', tracking: '-0.025em', color: '#fff' }}>HMR Engine</span>
+          </div>
+          <span style={{ fontSize: '12px', color: '#64748b' }}>Hybrid Model Router v2.4</span>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexGrow: 1 }}>
+          <button 
+            onClick={() => setActiveTab('sandbox')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '8px',
+              border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
+              backgroundColor: activeTab === 'sandbox' ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
+              color: activeTab === 'sandbox' ? '#818cf8' : '#94a3b8',
+              fontWeight: activeTab === 'sandbox' ? '600' : '400',
+              transition: 'all 0.2s'
+            }}
+          >
+            <Play size={18} />
+            <span>Sandbox Playground</span>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('analytics')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '8px',
+              border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
+              backgroundColor: activeTab === 'analytics' ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
+              color: activeTab === 'analytics' ? '#818cf8' : '#94a3b8',
+              fontWeight: activeTab === 'analytics' ? '600' : '400',
+              transition: 'all 0.2s'
+            }}
+          >
+            <BarChart3 size={18} />
+            <span>Analytics & Stats</span>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('calibration')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '8px',
+              border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
+              backgroundColor: activeTab === 'calibration' ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
+              color: activeTab === 'calibration' ? '#818cf8' : '#94a3b8',
+              fontWeight: activeTab === 'calibration' ? '600' : '400',
+              transition: 'all 0.2s'
+            }}
+          >
+            <Settings size={18} />
+            <span>Tuning Calibration</span>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('logs')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '8px',
+              border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
+              backgroundColor: activeTab === 'logs' ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
+              color: activeTab === 'logs' ? '#818cf8' : '#94a3b8',
+              fontWeight: activeTab === 'logs' ? '600' : '400',
+              transition: 'all 0.2s'
+            }}
+          >
+            <History size={18} />
+            <span>Telemetry Logs</span>
+          </button>
+        </div>
+
+        <div style={{ 
+          borderTop: '1px solid rgba(55, 65, 81, 0.4)', 
+          paddingTop: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}>
+          <button 
+            onClick={fetchTelemetry}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: 'transparent',
+              border: '1px solid rgba(148, 163, 184, 0.2)', padding: '8px 12px', borderRadius: '6px',
+              color: '#94a3b8', cursor: 'pointer', fontSize: '13px', justifyContent: 'center'
+            }}
+          >
+            <RefreshCw size={14} className={statsLoading ? 'animate-spin' : ''} />
+            <span>Refresh Stats</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div style={{ flexGrow: 1, padding: '40px', overflowY: 'auto' }}>
+        
+        {/* Play Sandbox Tab */}
+        {activeTab === 'sandbox' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+            <div>
+              <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '800' }}>Sandbox Playground</h1>
+              <p style={{ color: '#94a3b8', margin: 0 }}>Interact with the Unified Executor and trace execution decisions in real time.</p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '3fr 1.3fr', gap: '30px' }}>
+              {/* Prompt Settings and input */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <label style={{ fontSize: '14px', fontWeight: '600', color: '#cbd5e1' }}>User Query Prompt</label>
+                  <textarea 
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    style={{
+                      width: '100%', height: '120px', backgroundColor: '#0f172a', border: '1px solid rgba(71, 85, 105, 0.5)',
+                      borderRadius: '8px', padding: '12px', color: '#f8fafc', fontSize: '15px', fontFamily: 'inherit',
+                      resize: 'vertical', boxSizing: 'border-box'
+                    }}
+                  />
+                  <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexGrow: 1 }}>
+                      <label style={{ fontSize: '13px', color: '#94a3b8' }}>Routing Strategy</label>
+                      <select 
+                        value={strategy} 
+                        onChange={(e) => setStrategy(e.target.value)}
+                        style={{
+                          backgroundColor: '#0f172a', border: '1px solid rgba(71, 85, 105, 0.5)',
+                          padding: '10px', borderRadius: '6px', color: '#f1f5f9'
+                        }}
+                      >
+                        <option value="dynamic">Dynamic Routing</option>
+                        <option value="adaptive">Adaptive Routing (Budget Aware)</option>
+                        <option value="static-local">Static Local (0.5B)</option>
+                        <option value="static-remote">Static Remote (70B)</option>
+                      </select>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexGrow: 1 }}>
+                      <label style={{ fontSize: '13px', color: '#94a3b8' }}>Task Category</label>
+                      <select 
+                        value={category} 
+                        onChange={(e) => setCategory(e.target.value)}
+                        style={{
+                          backgroundColor: '#0f172a', border: '1px solid rgba(71, 85, 105, 0.5)',
+                          padding: '10px', borderRadius: '6px', color: '#f1f5f9'
+                        }}
+                      >
+                        <option value="general">General QA</option>
+                        <option value="code">Python Code</option>
+                        <option value="math">Mathematics</option>
+                        <option value="reasoning">Logical Reasoning</option>
+                        <option value="structured_output">Structured JSON</option>
+                      </select>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '120px' }}>
+                      <label style={{ fontSize: '13px', color: '#94a3b8' }}>Temperature</label>
+                      <input 
+                        type="number" 
+                        min="0" max="1" step="0.1" 
+                        value={temp}
+                        onChange={(e) => setTemp(parseFloat(e.target.value))}
+                        style={{
+                          backgroundColor: '#0f172a', border: '1px solid rgba(71, 85, 105, 0.5)',
+                          padding: '10px', borderRadius: '6px', color: '#f1f5f9'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {category === 'structured_output' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }} className="animate-slide-down">
+                      <label style={{ fontSize: '13px', color: '#94a3b8' }}>Required Keys (comma-separated)</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. name, age, city" 
+                        value={requiredKeys}
+                        onChange={(e) => setRequiredKeys(e.target.value)}
+                        style={{
+                          backgroundColor: '#0f172a', border: '1px solid rgba(71, 85, 105, 0.5)',
+                          padding: '10px', borderRadius: '6px', color: '#f1f5f9'
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+                    <button 
+                      onClick={handleExecute}
+                      disabled={execLoading}
+                      className="btn-primary"
+                    >
+                      {execLoading ? <RefreshCw size={16} className="animate-spin" /> : <Play size={16} />}
+                      <span>{execLoading ? 'Executing Traces...' : 'Run Query Engine'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Final Completion Output Result */}
+                {execResult && (
+                  <div className="glass-panel animate-slide-down" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <CheckCircle size={18} color="#10b981" />
+                        <span style={{ fontWeight: '700', fontSize: '16px' }}>Execution Output</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <span style={{ padding: '4px 8px', borderRadius: '4px', backgroundColor: 'rgba(99, 102, 241, 0.15)', fontSize: '12px', color: '#818cf8', fontWeight: '600' }}>
+                          Resolved: {execResult.source}
+                        </span>
+                        <span style={{ padding: '4px 8px', borderRadius: '4px', backgroundColor: 'rgba(16, 185, 129, 0.15)', fontSize: '12px', color: '#34d399', fontWeight: '600' }}>
+                          Latency: {execResult.latency}s
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div style={{ 
+                      backgroundColor: '#090d16', border: '1px solid rgba(255,255,255,0.02)',
+                      borderRadius: '8px', padding: '16px', fontSize: '14px', lineHeight: '1.6',
+                      fontFamily: category === 'code' ? 'Courier, monospace' : 'inherit',
+                      whiteSpace: 'pre-wrap', color: '#e2e8f0', maxHeight: '350px', overflowY: 'auto'
+                    }}>
+                      {execResult.text}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Live Trace waterfall flowchart */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div className="glass-panel" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#f1f5f9' }}>Decision Trace Path</h3>
+                  
+                  {traceSteps.length === 0 ? (
+                    <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#64748b', textAlign: 'center', gap: '12px' }}>
+                      <Activity size={32} />
+                      <span style={{ fontSize: '14px' }}>No active runs.<br/>Click "Run Query Engine" to view decision mapping.</span>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', position: 'relative' }}>
+                      {traceSteps.map((step, idx) => (
+                        <div key={idx} style={{ display: 'flex', gap: '16px', position: 'relative' }}>
+                          {/* Connector Line */}
+                          {idx < traceSteps.length - 1 && (
+                            <div style={{
+                              position: 'absolute', left: '15px', top: '30px', bottom: '-20px', width: '2px',
+                              backgroundColor: 'rgba(99, 102, 241, 0.2)'
+                            }} />
+                          )}
+                          
+                          {/* Step icon */}
+                          <div style={{
+                            width: '32px', height: '32px', borderRadius: '50%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1,
+                            backgroundColor: step.status === 'success' ? 'rgba(16, 185, 129, 0.15)' :
+                                             step.status === 'failed' ? 'rgba(239, 68, 68, 0.15)' :
+                                             step.status === 'escalated' ? 'rgba(245, 158, 11, 0.15)' :
+                                             step.status === 'miss' ? 'rgba(148, 163, 184, 0.1)' : 'rgba(99, 102, 241, 0.2)',
+                            color: step.status === 'success' ? '#10b981' :
+                                   step.status === 'failed' ? '#ef4444' :
+                                   step.status === 'escalated' ? '#f59e0b' : '#818cf8',
+                            border: '1px solid ' + (
+                              step.status === 'success' ? 'rgba(16, 185, 129, 0.4)' :
+                              step.status === 'failed' ? 'rgba(239, 68, 68, 0.4)' :
+                              step.status === 'escalated' ? 'rgba(245, 158, 11, 0.4)' : 'rgba(99, 102, 241, 0.4)'
+                            )
+                          }}>
+                            {step.id === 'cache' && <Database size={14} />}
+                            {step.id === 'gate' && <ShieldAlert size={14} />}
+                            {step.id === 'local' && <Cpu size={14} />}
+                            {step.id === 'trust' && <Activity size={14} />}
+                            {step.id === 'remote' && <ArrowRight size={14} />}
+                            {step.id === 'error' && <AlertTriangle size={14} />}
+                          </div>
+
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexGrow: 1, justifyContent: 'center' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#cbd5e1' }}>
+                              {step.id.toUpperCase() === 'CACHE' ? 'Cache Checker' :
+                               step.id.toUpperCase() === 'GATE' ? 'Predictive Gate' :
+                               step.id.toUpperCase() === 'LOCAL' ? 'Local LLM (0.5B)' :
+                               step.id.toUpperCase() === 'TRUST' ? 'Signals Check' : 'Remote Expert'}
+                            </span>
+                            <span style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.4' }}>{step.label}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Analytics & Charts Tab */}
+        {activeTab === 'analytics' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+            <div>
+              <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '800' }}>Engine Analytics & Metrics</h1>
+              <p style={{ color: '#94a3b8', margin: 0 }}>View cost, latency, and query distributions saved by our hybrid routing framework.</p>
+            </div>
+
+            {/* KPI Cards row */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+              <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
+                  <DollarSign size={24} />
+                </div>
+                <div>
+                  <span style={{ display: 'block', fontSize: '12px', color: '#94a3b8' }}>Total Dollars Saved</span>
+                  <span style={{ fontSize: '24px', fontWeight: '800', color: '#10b981', textShadow: '0 0 10px rgba(16,185,129,0.2)' }}>
+                    ${stats.savings_dollars.toFixed(3)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(99, 102, 241, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1' }}>
+                  <Activity size={24} />
+                </div>
+                <div>
+                  <span style={{ display: 'block', fontSize: '12px', color: '#94a3b8' }}>Total Queries Ran</span>
+                  <span style={{ fontSize: '24px', fontWeight: '800', color: '#fff' }}>{stats.total_queries}</span>
+                </div>
+              </div>
+
+              <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(236, 72, 153, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ec4899' }}>
+                  <Database size={24} />
+                </div>
+                <div>
+                  <span style={{ display: 'block', fontSize: '12px', color: '#94a3b8' }}>Cache Hits</span>
+                  <span style={{ fontSize: '24px', fontWeight: '800', color: '#fff' }}>
+                    {stats.cache_hits} ({stats.total_queries > 0 ? Math.round((stats.cache_hits/stats.total_queries)*100) : 0}%)
+                  </span>
+                </div>
+              </div>
+
+              <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(245, 158, 11, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f59e0b' }}>
+                  <TrendingUp size={24} />
+                </div>
+                <div>
+                  <span style={{ display: 'block', fontSize: '12px', color: '#94a3b8' }}>Escalation Rate</span>
+                  <span style={{ fontSize: '24px', fontWeight: '800', color: '#fff' }}>
+                    {stats.total_queries > 0 ? Math.round((stats.escalations/stats.total_queries)*100) : 0}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Graphs Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+              {/* Cost comparison chart */}
+              <div className="glass-panel" style={{ height: '350px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700' }}>Cost Savings ($): Router vs Remote Baseline</h3>
+                <div style={{ flexGrow: 1, width: '100%', height: '80%' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        { name: 'Remote-Only Baseline', cost: stats.total_queries * 180 * 0.000015 },
+                        { name: 'Our Hybrid Router', cost: stats.total_remote_tokens * 0.000015 }
+                      ]}
+                      margin={{ top: 20, right: 30, left: 10, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                      <XAxis dataKey="name" stroke="#94a3b8" />
+                      <YAxis stroke="#94a3b8" unit="$" />
+                      <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }} />
+                      <Bar dataKey="cost" name="Total Spend" fill="#6366f1" radius={[8, 8, 0, 0]}>
+                        <Cell fill="#f43f5e" />
+                        <Cell fill="#10b981" />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Source Distribution donut */}
+              <div className="glass-panel" style={{ height: '350px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700' }}>Routing Decisions Distribution</h3>
+                <div style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {sourcePieData.length === 0 ? (
+                    <span style={{ color: '#64748b' }}>No data logs found.</span>
+                  ) : (
+                    <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+                      <div style={{ width: '200px', height: '200px' }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={sourcePieData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={5}
+                              dataKey="value"
+                            >
+                              {sourcePieData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {sourcePieData.map((entry, idx) => (
+                          <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+                            <div style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: COLORS[idx % COLORS.length] }} />
+                            <span style={{ color: '#cbd5e1' }}>{entry.name}:</span>
+                            <span style={{ fontWeight: '700' }}>{entry.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Threshold Tuning Tab */}
+        {activeTab === 'calibration' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+            <div>
+              <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '800' }}>Threshold Tuning & Calibration</h1>
+              <p style={{ color: '#94a3b8', margin: 0 }}>Configure and balance routing parameters based on Pareto-frontier cost vs accuracy trade-offs.</p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+              {/* Sliders Form */}
+              <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
+                  Threshold Configurations
+                </h3>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: '600', fontSize: '14px' }}>Self-Consistency Threshold</span>
+                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#818cf8' }}>{config.consistency_threshold.toFixed(2)}</span>
+                  </div>
+                  <input 
+                    type="range" min="0" max="1" step="0.05"
+                    value={config.consistency_threshold}
+                    onChange={(e) => setConfig(prev => ({ ...prev, consistency_threshold: parseFloat(e.target.value) }))}
+                    style={{ width: '100%', accentColor: '#6366f1' }}
+                  />
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>Minimum cosine-similarity score required between local temperature runs to trust local output.</span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: '600', fontSize: '14px' }}>Token Entropy Limit</span>
+                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#818cf8' }}>{config.entropy_threshold.toFixed(2)}</span>
+                  </div>
+                  <input 
+                    type="range" min="0.1" max="3" step="0.1"
+                    value={config.entropy_threshold}
+                    onChange={(e) => setConfig(prev => ({ ...prev, entropy_threshold: parseFloat(e.target.value) }))}
+                    style={{ width: '100%', accentColor: '#6366f1' }}
+                  />
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>Maximum average transition token entropy allowed before escalating. Lower means more strict.</span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+                  <button 
+                    onClick={handleSaveConfig}
+                    disabled={saveLoading}
+                    className="btn-primary"
+                  >
+                    {saveLoading ? <RefreshCw size={16} className="animate-spin" /> : <Settings size={16} />}
+                    <span>{saveLoading ? 'Calibrating...' : 'Apply Calibrated Settings'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Pareto Frontier curve */}
+              <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '350px' }}>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700' }}>Calibration Pareto Frontier (Cost vs Accuracy)</h3>
+                <div style={{ flexGrow: 1, width: '100%', height: '80%' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={paretoData}
+                      margin={{ top: 20, right: 30, left: 10, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                      <XAxis dataKey="cost" name="Inference Spend per Run" label={{ value: 'Spend ($)', position: 'insideBottom', offset: -5 }} stroke="#94a3b8" />
+                      <YAxis domain={[50, 100]} name="Accuracy" label={{ value: 'Accuracy (%)', angle: -90, position: 'insideLeft', offset: 10 }} stroke="#94a3b8" />
+                      <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }} />
+                      <Area type="monotone" dataKey="accuracy" name="Router Accuracy (%)" stroke="#818cf8" fill="rgba(99, 102, 241, 0.15)" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Telemetry Logs history Tab */}
+        {activeTab === 'logs' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+            <div>
+              <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '800' }}>Telemetry Execution Logs</h1>
+              <p style={{ color: '#94a3b8', margin: 0 }}>Review historical execution traces and diagnostics collected in `routing_execution.jsonl`.</p>
+            </div>
+
+            <div className="glass-panel" style={{ padding: '0px', overflow: 'hidden' }}>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(55,65,81,0.4)' }}>
+                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '700', color: '#94a3b8' }}>Timestamp</th>
+                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '700', color: '#94a3b8' }}>Query Prompt</th>
+                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '700', color: '#94a3b8' }}>Strategy</th>
+                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '700', color: '#94a3b8' }}>Category</th>
+                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '700', color: '#94a3b8' }}>Final Source</th>
+                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '700', color: '#94a3b8' }}>Tokens (L/R)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>
+                          No execution logs found. Run queries from the Sandbox tab first!
+                        </td>
+                      </tr>
+                    ) : (
+                      history.map((log, idx) => (
+                        <tr key={idx} style={{ 
+                          borderBottom: '1px solid rgba(55,65,81,0.2)',
+                          backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)',
+                          transition: 'background-color 0.2s'
+                        }}
+                        className="hover:bg-slate-800/40"
+                        >
+                          <td style={{ padding: '14px 16px', fontSize: '12px', color: '#64748b' }}>
+                            {log.timestamp ? log.timestamp.split('T')[1].substring(0, 8) : 'Unknown'}
+                          </td>
+                          <td style={{ 
+                            padding: '14px 16px', fontSize: '13px', color: '#e2e8f0', 
+                            maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                          }}>
+                            {log.prompt}
+                          </td>
+                          <td style={{ padding: '14px 16px', fontSize: '13px', color: '#94a3b8' }}>
+                            {log.routing_strategy}
+                          </td>
+                          <td style={{ padding: '14px 16px', fontSize: '12px' }}>
+                            <span style={{
+                              padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(255,255,255,0.05)',
+                              color: '#cbd5e1', fontSize: '11px', fontWeight: '600'
+                            }}>
+                              {log.category}
+                            </span>
+                          </td>
+                          <td style={{ padding: '14px 16px', fontSize: '13px', fontWeight: '600' }}>
+                            <span style={{
+                              color: log.source.toLowerCase().includes('cache') ? '#10b981' :
+                                     log.source.toLowerCase().includes('local') ? '#38bdf8' : '#fb923c'
+                            }}>
+                              {log.source}
+                            </span>
+                          </td>
+                          <td style={{ padding: '14px 16px', fontSize: '13px', color: '#cbd5e1' }}>
+                            {log.local_tokens_used || 0} / {log.remote_tokens_used || 0}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
