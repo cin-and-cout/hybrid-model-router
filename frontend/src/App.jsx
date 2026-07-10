@@ -6,7 +6,8 @@ import {
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, 
-  ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend
+  ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend,
+  LineChart, Line
 } from 'recharts';
 
 export default function App() {
@@ -714,81 +715,152 @@ export default function App() {
         )}
 
         {/* Threshold Tuning Tab */}
-        {activeTab === 'calibration' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-            <div>
-              <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '800', color: '#0f172a' }}>Threshold Tuning & Calibration</h1>
-              <p style={{ color: '#475569', margin: 0 }}>Configure and balance routing parameters based on Pareto-frontier cost vs accuracy trade-offs.</p>
-            </div>
+        {activeTab === 'calibration' && (() => {
+          const ct = config.consistency_threshold;
+          const et = config.entropy_threshold;
+          const escRate = Math.min(0.96, Math.max(0.04, (ct * 0.48) + ((2.6 - et) * 0.16)));
+          const estAccuracy = 55.4 + escRate * (98.2 - 55.4);
+          const estCost = escRate * 180 * 0.000015;
+          const estSavings = (1 - escRate) * 100;
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
-              {/* Sliders Form */}
-              <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', borderBottom: '1px solid rgba(226,232,240,0.8)', paddingBottom: '12px', color: '#0f172a' }}>
-                  Threshold Configurations
-                </h3>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: '600', fontSize: '14px', color: '#0f172a' }}>Self-Consistency Threshold</span>
-                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#0284c7' }}>{config.consistency_threshold.toFixed(2)}</span>
-                  </div>
-                  <input 
-                    type="range" min="0" max="1" step="0.05"
-                    value={config.consistency_threshold}
-                    onChange={(e) => setConfig(prev => ({ ...prev, consistency_threshold: parseFloat(e.target.value) }))}
-                    style={{ width: '100%', accentColor: '#0284c7' }}
-                  />
-                  <span style={{ fontSize: '11px', color: '#64748b' }}>Minimum cosine-similarity score required between local temperature runs to trust local output.</span>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: '600', fontSize: '14px', color: '#0f172a' }}>Token Entropy Limit</span>
-                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#0284c7' }}>{config.entropy_threshold.toFixed(2)}</span>
-                  </div>
-                  <input 
-                    type="range" min="0.1" max="3" step="0.1"
-                    value={config.entropy_threshold}
-                    onChange={(e) => setConfig(prev => ({ ...prev, entropy_threshold: parseFloat(e.target.value) }))}
-                    style={{ width: '100%', accentColor: '#0284c7' }}
-                  />
-                  <span style={{ fontSize: '11px', color: '#64748b' }}>Maximum average transition token entropy allowed before escalating. Lower means more strict.</span>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-                  <button 
-                    onClick={handleSaveConfig}
-                    disabled={saveLoading}
-                    className="btn-primary"
-                  >
-                    {saveLoading ? <RefreshCw size={16} className="animate-spin" /> : <Settings size={16} />}
-                    <span>{saveLoading ? 'Calibrating...' : 'Apply Calibrated Settings'}</span>
-                  </button>
-                </div>
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+              <div>
+                <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '800', color: '#0f172a' }}>Threshold Tuning & Calibration</h1>
+                <p style={{ color: '#475569', margin: 0 }}>Configure and balance routing parameters based on Pareto-frontier cost vs accuracy trade-offs.</p>
               </div>
 
-              {/* Pareto Frontier curve */}
-              <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '350px' }}>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>Calibration Pareto Frontier (Cost vs Accuracy)</h3>
-                <div style={{ flexGrow: 1, width: '100%', height: '80%' }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart
-                      data={paretoData}
-                      margin={{ top: 20, right: 30, left: 10, bottom: 5 }}
+              {/* Top Row: Config Form & Live Sim Cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+                {/* Sliders Form */}
+                <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', borderBottom: '1px solid rgba(226,232,240,0.8)', paddingBottom: '12px', color: '#0f172a' }}>
+                    Threshold Configurations
+                  </h3>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: '600', fontSize: '14px', color: '#0f172a' }}>Self-Consistency Threshold</span>
+                      <span style={{ fontSize: '14px', fontWeight: '700', color: '#0284c7' }}>{config.consistency_threshold.toFixed(2)}</span>
+                    </div>
+                    <input 
+                      type="range" min="0" max="1" step="0.05"
+                      value={config.consistency_threshold}
+                      onChange={(e) => setConfig(prev => ({ ...prev, consistency_threshold: parseFloat(e.target.value) }))}
+                      style={{ width: '100%', accentColor: '#0284c7' }}
+                    />
+                    <span style={{ fontSize: '11px', color: '#64748b' }}>Minimum cosine-similarity score required between local temperature runs to trust local output.</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: '600', fontSize: '14px', color: '#0f172a' }}>Token Entropy Limit</span>
+                      <span style={{ fontSize: '14px', fontWeight: '700', color: '#0284c7' }}>{config.entropy_threshold.toFixed(2)}</span>
+                    </div>
+                    <input 
+                      type="range" min="0.1" max="3" step="0.1"
+                      value={config.entropy_threshold}
+                      onChange={(e) => setConfig(prev => ({ ...prev, entropy_threshold: parseFloat(e.target.value) }))}
+                      style={{ width: '100%', accentColor: '#0284c7' }}
+                    />
+                    <span style={{ fontSize: '11px', color: '#64748b' }}>Maximum average transition token entropy allowed before escalating. Lower means more strict.</span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+                    <button 
+                      onClick={handleSaveConfig}
+                      disabled={saveLoading}
+                      className="btn-primary"
                     >
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
-                      <XAxis dataKey="cost" name="Inference Spend per Run" label={{ value: 'Spend ($)', position: 'insideBottom', offset: -5 }} stroke="#475569" />
-                      <YAxis domain={[50, 100]} name="Accuracy" label={{ value: 'Accuracy (%)', angle: -90, position: 'insideLeft', offset: 10 }} stroke="#475569" />
-                      <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid rgba(226,232,240,0.8)', color: '#0f172a' }} />
-                      <Area type="monotone" dataKey="accuracy" name="Router Accuracy (%)" stroke="#0284c7" fill="rgba(2, 132, 199, 0.1)" strokeWidth={2} />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                      {saveLoading ? <RefreshCw size={16} className="animate-spin" /> : <Settings size={16} />}
+                      <span>{saveLoading ? 'Calibrating...' : 'Apply Calibrated Settings'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Live Sim Card Panel */}
+                <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', borderBottom: '1px solid rgba(226,232,240,0.8)', paddingBottom: '12px', color: '#0f172a' }}>
+                    Simulated System Estimates
+                  </h3>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flexGrow: 1, justifyContent: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', borderRadius: '8px', backgroundColor: 'rgba(2, 132, 199, 0.04)', border: '1px solid rgba(2, 132, 199, 0.1)' }}>
+                      <span style={{ fontSize: '14px', color: '#475569', fontWeight: '500' }}>Expected System Accuracy</span>
+                      <span style={{ fontSize: '18px', fontWeight: '800', color: '#0284c7' }}>{estAccuracy.toFixed(1)}%</span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', borderRadius: '8px', backgroundColor: 'rgba(13, 148, 136, 0.04)', border: '1px solid rgba(13, 148, 136, 0.1)' }}>
+                      <span style={{ fontSize: '14px', color: '#475569', fontWeight: '500' }}>Token Expense Reduction</span>
+                      <span style={{ fontSize: '18px', fontWeight: '800', color: '#0d9488' }}>{estSavings.toFixed(1)}%</span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', borderRadius: '8px', backgroundColor: 'rgba(245, 158, 11, 0.04)', border: '1px solid rgba(245, 158, 11, 0.1)' }}>
+                      <span style={{ fontSize: '14px', color: '#475569', fontWeight: '500' }}>Estimated Cost per Query</span>
+                      <span style={{ fontSize: '18px', fontWeight: '800', color: '#d97706' }}>${estCost.toFixed(5)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Row: Two Charts */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+                {/* Pareto Frontier */}
+                <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '350px' }}>
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>Calibration Pareto Frontier (Cost vs Accuracy)</h3>
+                  <div style={{ flexGrow: 1, width: '100%', height: '80%' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart
+                        data={paretoData}
+                        margin={{ top: 20, right: 30, left: 10, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
+                        <XAxis dataKey="cost" name="Inference Spend per Run" label={{ value: 'Spend ($)', position: 'insideBottom', offset: -5 }} stroke="#475569" />
+                        <YAxis domain={[50, 100]} name="Accuracy" label={{ value: 'Accuracy (%)', angle: -90, position: 'insideLeft', offset: 10 }} stroke="#475569" />
+                        <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid rgba(226,232,240,0.8)', color: '#0f172a' }} />
+                        <Area type="monotone" dataKey="accuracy" name="Router Accuracy (%)" stroke="#0284c7" fill="rgba(2, 132, 199, 0.1)" strokeWidth={2} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Threshold Sensitivity */}
+                <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '350px' }}>
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>Threshold Sensitivity Trade-offs</h3>
+                  <div style={{ flexGrow: 1, width: '100%', height: '80%' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={[
+                          { threshold: 0.0, accuracy: 55.4, cost: 0.0000 },
+                          { threshold: 0.1, accuracy: 59.8, cost: 0.0002 },
+                          { threshold: 0.2, accuracy: 64.2, cost: 0.0005 },
+                          { threshold: 0.3, accuracy: 70.5, cost: 0.0008 },
+                          { threshold: 0.4, accuracy: 78.5, cost: 0.0013 },
+                          { threshold: 0.5, accuracy: 85.1, cost: 0.0018 },
+                          { threshold: 0.6, accuracy: 89.2, cost: 0.0022 },
+                          { threshold: 0.7, accuracy: 92.4, cost: 0.0025 },
+                          { threshold: 0.8, accuracy: 95.0, cost: 0.0027 },
+                          { threshold: 0.9, accuracy: 96.8, cost: 0.0028 },
+                          { threshold: 1.0, accuracy: 98.2, cost: 0.0029 }
+                        ]}
+                        margin={{ top: 20, right: 30, left: 10, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
+                        <XAxis dataKey="threshold" stroke="#475569" label={{ value: 'Sensitivity Threshold', position: 'insideBottom', offset: -5 }} />
+                        <YAxis yAxisId="left" stroke="#0284c7" domain={[50, 100]} label={{ value: 'Accuracy (%)', angle: -90, position: 'insideLeft', offset: 10 }} />
+                        <YAxis yAxisId="right" orientation="right" stroke="#0d9488" label={{ value: 'Estimated Spend ($)', angle: 90, position: 'insideRight', offset: 10 }} />
+                        <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid rgba(226,232,240,0.8)', color: '#0f172a' }} />
+                        <Legend />
+                        <Line yAxisId="left" type="monotone" dataKey="accuracy" name="Accuracy (%)" stroke="#0284c7" strokeWidth={2.5} activeDot={{ r: 8 }} />
+                        <Line yAxisId="right" type="monotone" dataKey="cost" name="Query Cost ($)" stroke="#0d9488" strokeWidth={2.5} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Telemetry Logs history Tab */}
         {activeTab === 'logs' && (
