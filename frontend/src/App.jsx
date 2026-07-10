@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('sandbox');
+  const [activeTab, setActiveTab] = useState('analytics'); // Analytics as default page
   const [prompt, setPrompt] = useState('Write a python function to check if a number is prime.');
   const [strategy, setStrategy] = useState('dynamic');
   const [category, setCategory] = useState('code');
@@ -183,15 +183,15 @@ export default function App() {
     name, value
   }));
 
-  const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#3b82f6'];
+  const COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#db2777', '#3b82f6'];
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0b0f19' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
       {/* Sidebar Navigation */}
       <div style={{ 
         width: '260px', 
-        borderRight: '1px solid rgba(55, 65, 81, 0.4)', 
-        backgroundColor: '#0f172a',
+        borderRight: '1px solid rgba(226, 232, 240, 0.8)', 
+        backgroundColor: '#ffffff',
         padding: '24px 16px',
         display: 'flex',
         flexDirection: 'column',
@@ -203,41 +203,26 @@ export default function App() {
               width: '32px', 
               height: '32px', 
               borderRadius: '8px', 
-              background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+              background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
             }}>
               <Cpu size={18} color="#fff" />
             </div>
-            <span style={{ fontSize: '18px', fontWeight: '800', tracking: '-0.025em', color: '#fff' }}>HMR Engine</span>
+            <span style={{ fontSize: '18px', fontWeight: '800', tracking: '-0.025em', color: '#0f172a' }}>HMR Engine</span>
           </div>
           <span style={{ fontSize: '12px', color: '#64748b' }}>Hybrid Model Router v2.4</span>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexGrow: 1 }}>
           <button 
-            onClick={() => setActiveTab('sandbox')}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '8px',
-              border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
-              backgroundColor: activeTab === 'sandbox' ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
-              color: activeTab === 'sandbox' ? '#818cf8' : '#94a3b8',
-              fontWeight: activeTab === 'sandbox' ? '600' : '400',
-              transition: 'all 0.2s'
-            }}
-          >
-            <Play size={18} />
-            <span>Sandbox Playground</span>
-          </button>
-
-          <button 
             onClick={() => setActiveTab('analytics')}
             style={{
               display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '8px',
               border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
-              backgroundColor: activeTab === 'analytics' ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
-              color: activeTab === 'analytics' ? '#818cf8' : '#94a3b8',
+              backgroundColor: activeTab === 'analytics' ? 'rgba(79, 70, 229, 0.08)' : 'transparent',
+              color: activeTab === 'analytics' ? '#4f46e5' : '#475569',
               fontWeight: activeTab === 'analytics' ? '600' : '400',
               transition: 'all 0.2s'
             }}
@@ -247,12 +232,27 @@ export default function App() {
           </button>
 
           <button 
+            onClick={() => setActiveTab('sandbox')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '8px',
+              border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
+              backgroundColor: activeTab === 'sandbox' ? 'rgba(79, 70, 229, 0.08)' : 'transparent',
+              color: activeTab === 'sandbox' ? '#4f46e5' : '#475569',
+              fontWeight: activeTab === 'sandbox' ? '600' : '400',
+              transition: 'all 0.2s'
+            }}
+          >
+            <Play size={18} />
+            <span>Sandbox Playground</span>
+          </button>
+
+          <button 
             onClick={() => setActiveTab('calibration')}
             style={{
               display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '8px',
               border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
-              backgroundColor: activeTab === 'calibration' ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
-              color: activeTab === 'calibration' ? '#818cf8' : '#94a3b8',
+              backgroundColor: activeTab === 'calibration' ? 'rgba(79, 70, 229, 0.08)' : 'transparent',
+              color: activeTab === 'calibration' ? '#4f46e5' : '#475569',
               fontWeight: activeTab === 'calibration' ? '600' : '400',
               transition: 'all 0.2s'
             }}
@@ -266,8 +266,8 @@ export default function App() {
             style={{
               display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '8px',
               border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
-              backgroundColor: activeTab === 'logs' ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
-              color: activeTab === 'logs' ? '#818cf8' : '#94a3b8',
+              backgroundColor: activeTab === 'logs' ? 'rgba(79, 70, 229, 0.08)' : 'transparent',
+              color: activeTab === 'logs' ? '#4f46e5' : '#475569',
               fontWeight: activeTab === 'logs' ? '600' : '400',
               transition: 'all 0.2s'
             }}
@@ -278,7 +278,7 @@ export default function App() {
         </div>
 
         <div style={{ 
-          borderTop: '1px solid rgba(55, 65, 81, 0.4)', 
+          borderTop: '1px solid rgba(226, 232, 240, 0.8)', 
           paddingTop: '16px',
           display: 'flex',
           flexDirection: 'column',
@@ -288,8 +288,8 @@ export default function App() {
             onClick={fetchTelemetry}
             style={{
               display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: 'transparent',
-              border: '1px solid rgba(148, 163, 184, 0.2)', padding: '8px 12px', borderRadius: '6px',
-              color: '#94a3b8', cursor: 'pointer', fontSize: '13px', justifyContent: 'center'
+              border: '1px solid rgba(71, 85, 105, 0.15)', padding: '8px 12px', borderRadius: '6px',
+              color: '#475569', cursor: 'pointer', fontSize: '13px', justifyContent: 'center'
             }}
           >
             <RefreshCw size={14} className={statsLoading ? 'animate-spin' : ''} />
@@ -305,33 +305,33 @@ export default function App() {
         {activeTab === 'sandbox' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
             <div>
-              <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '800' }}>Sandbox Playground</h1>
-              <p style={{ color: '#94a3b8', margin: 0 }}>Interact with the Unified Executor and trace execution decisions in real time.</p>
+              <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '800', color: '#0f172a' }}>Sandbox Playground</h1>
+              <p style={{ color: '#475569', margin: 0 }}>Interact with the Unified Executor and trace execution decisions in real time.</p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '3fr 1.3fr', gap: '30px' }}>
               {/* Prompt Settings and input */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <label style={{ fontSize: '14px', fontWeight: '600', color: '#cbd5e1' }}>User Query Prompt</label>
+                  <label style={{ fontSize: '14px', fontWeight: '600', color: '#334155' }}>User Query Prompt</label>
                   <textarea 
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     style={{
-                      width: '100%', height: '120px', backgroundColor: '#0f172a', border: '1px solid rgba(71, 85, 105, 0.5)',
-                      borderRadius: '8px', padding: '12px', color: '#f8fafc', fontSize: '15px', fontFamily: 'inherit',
+                      width: '100%', height: '120px', backgroundColor: '#ffffff', border: '1px solid rgba(226, 232, 240, 0.8)',
+                      borderRadius: '8px', padding: '12px', color: '#0f172a', fontSize: '15px', fontFamily: 'inherit',
                       resize: 'vertical', boxSizing: 'border-box'
                     }}
                   />
                   <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexGrow: 1 }}>
-                      <label style={{ fontSize: '13px', color: '#94a3b8' }}>Routing Strategy</label>
+                      <label style={{ fontSize: '13px', color: '#475569' }}>Routing Strategy</label>
                       <select 
                         value={strategy} 
                         onChange={(e) => setStrategy(e.target.value)}
                         style={{
-                          backgroundColor: '#0f172a', border: '1px solid rgba(71, 85, 105, 0.5)',
-                          padding: '10px', borderRadius: '6px', color: '#f1f5f9'
+                          backgroundColor: '#ffffff', border: '1px solid rgba(226, 232, 240, 0.8)',
+                          padding: '10px', borderRadius: '6px', color: '#0f172a'
                         }}
                       >
                         <option value="dynamic">Dynamic Routing</option>
@@ -342,13 +342,13 @@ export default function App() {
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexGrow: 1 }}>
-                      <label style={{ fontSize: '13px', color: '#94a3b8' }}>Task Category</label>
+                      <label style={{ fontSize: '13px', color: '#475569' }}>Task Category</label>
                       <select 
                         value={category} 
                         onChange={(e) => setCategory(e.target.value)}
                         style={{
-                          backgroundColor: '#0f172a', border: '1px solid rgba(71, 85, 105, 0.5)',
-                          padding: '10px', borderRadius: '6px', color: '#f1f5f9'
+                          backgroundColor: '#ffffff', border: '1px solid rgba(226, 232, 240, 0.8)',
+                          padding: '10px', borderRadius: '6px', color: '#0f172a'
                         }}
                       >
                         <option value="general">General QA</option>
@@ -360,15 +360,15 @@ export default function App() {
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '120px' }}>
-                      <label style={{ fontSize: '13px', color: '#94a3b8' }}>Temperature</label>
+                      <label style={{ fontSize: '13px', color: '#475569' }}>Temperature</label>
                       <input 
                         type="number" 
                         min="0" max="1" step="0.1" 
                         value={temp}
                         onChange={(e) => setTemp(parseFloat(e.target.value))}
                         style={{
-                          backgroundColor: '#0f172a', border: '1px solid rgba(71, 85, 105, 0.5)',
-                          padding: '10px', borderRadius: '6px', color: '#f1f5f9'
+                          backgroundColor: '#ffffff', border: '1px solid rgba(226, 232, 240, 0.8)',
+                          padding: '10px', borderRadius: '6px', color: '#0f172a'
                         }}
                       />
                     </div>
@@ -376,15 +376,15 @@ export default function App() {
 
                   {category === 'structured_output' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }} className="animate-slide-down">
-                      <label style={{ fontSize: '13px', color: '#94a3b8' }}>Required Keys (comma-separated)</label>
+                      <label style={{ fontSize: '13px', color: '#475569' }}>Required Keys (comma-separated)</label>
                       <input 
                         type="text" 
                         placeholder="e.g. name, age, city" 
                         value={requiredKeys}
                         onChange={(e) => setRequiredKeys(e.target.value)}
                         style={{
-                          backgroundColor: '#0f172a', border: '1px solid rgba(71, 85, 105, 0.5)',
-                          padding: '10px', borderRadius: '6px', color: '#f1f5f9'
+                          backgroundColor: '#ffffff', border: '1px solid rgba(226, 232, 240, 0.8)',
+                          padding: '10px', borderRadius: '6px', color: '#0f172a'
                         }}
                       />
                     </div>
@@ -405,26 +405,26 @@ export default function App() {
                 {/* Final Completion Output Result */}
                 {execResult && (
                   <div className="glass-panel animate-slide-down" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(226,232,240,0.8)', paddingBottom: '12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <CheckCircle size={18} color="#10b981" />
-                        <span style={{ fontWeight: '700', fontSize: '16px' }}>Execution Output</span>
+                        <span style={{ fontWeight: '700', fontSize: '16px', color: '#0f172a' }}>Execution Output</span>
                       </div>
                       <div style={{ display: 'flex', gap: '10px' }}>
-                        <span style={{ padding: '4px 8px', borderRadius: '4px', backgroundColor: 'rgba(99, 102, 241, 0.15)', fontSize: '12px', color: '#818cf8', fontWeight: '600' }}>
+                        <span style={{ padding: '4px 8px', borderRadius: '4px', backgroundColor: 'rgba(79, 70, 229, 0.08)', fontSize: '12px', color: '#4f46e5', fontWeight: '600' }}>
                           Resolved: {execResult.source}
                         </span>
-                        <span style={{ padding: '4px 8px', borderRadius: '4px', backgroundColor: 'rgba(16, 185, 129, 0.15)', fontSize: '12px', color: '#34d399', fontWeight: '600' }}>
+                        <span style={{ padding: '4px 8px', borderRadius: '4px', backgroundColor: 'rgba(16, 185, 129, 0.08)', fontSize: '12px', color: '#059669', fontWeight: '600' }}>
                           Latency: {execResult.latency}s
                         </span>
                       </div>
                     </div>
                     
                     <div style={{ 
-                      backgroundColor: '#090d16', border: '1px solid rgba(255,255,255,0.02)',
+                      backgroundColor: '#f1f5f9', border: '1px solid rgba(226,232,240,0.8)',
                       borderRadius: '8px', padding: '16px', fontSize: '14px', lineHeight: '1.6',
                       fontFamily: category === 'code' ? 'Courier, monospace' : 'inherit',
-                      whiteSpace: 'pre-wrap', color: '#e2e8f0', maxHeight: '350px', overflowY: 'auto'
+                      whiteSpace: 'pre-wrap', color: '#0f172a', maxHeight: '350px', overflowY: 'auto'
                     }}>
                       {execResult.text}
                     </div>
@@ -435,7 +435,7 @@ export default function App() {
               {/* Live Trace waterfall flowchart */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div className="glass-panel" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#f1f5f9' }}>Decision Trace Path</h3>
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>Decision Trace Path</h3>
                   
                   {traceSteps.length === 0 ? (
                     <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#64748b', textAlign: 'center', gap: '12px' }}>
@@ -450,7 +450,7 @@ export default function App() {
                           {idx < traceSteps.length - 1 && (
                             <div style={{
                               position: 'absolute', left: '15px', top: '30px', bottom: '-20px', width: '2px',
-                              backgroundColor: 'rgba(99, 102, 241, 0.2)'
+                              backgroundColor: 'rgba(79, 70, 229, 0.2)'
                             }} />
                           )}
                           
@@ -458,17 +458,17 @@ export default function App() {
                           <div style={{
                             width: '32px', height: '32px', borderRadius: '50%',
                             display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1,
-                            backgroundColor: step.status === 'success' ? 'rgba(16, 185, 129, 0.15)' :
-                                             step.status === 'failed' ? 'rgba(239, 68, 68, 0.15)' :
-                                             step.status === 'escalated' ? 'rgba(245, 158, 11, 0.15)' :
-                                             step.status === 'miss' ? 'rgba(148, 163, 184, 0.1)' : 'rgba(99, 102, 241, 0.2)',
+                            backgroundColor: step.status === 'success' ? 'rgba(16, 185, 129, 0.1)' :
+                                             step.status === 'failed' ? 'rgba(239, 68, 68, 0.1)' :
+                                             step.status === 'escalated' ? 'rgba(245, 158, 11, 0.1)' :
+                                             step.status === 'miss' ? 'rgba(148, 163, 184, 0.1)' : 'rgba(79, 70, 229, 0.1)',
                             color: step.status === 'success' ? '#10b981' :
                                    step.status === 'failed' ? '#ef4444' :
-                                   step.status === 'escalated' ? '#f59e0b' : '#818cf8',
+                                   step.status === 'escalated' ? '#f59e0b' : '#4f46e5',
                             border: '1px solid ' + (
-                              step.status === 'success' ? 'rgba(16, 185, 129, 0.4)' :
-                              step.status === 'failed' ? 'rgba(239, 68, 68, 0.4)' :
-                              step.status === 'escalated' ? 'rgba(245, 158, 11, 0.4)' : 'rgba(99, 102, 241, 0.4)'
+                              step.status === 'success' ? 'rgba(16, 185, 129, 0.3)' :
+                              step.status === 'failed' ? 'rgba(239, 68, 68, 0.3)' :
+                              step.status === 'escalated' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(79, 70, 229, 0.3)'
                             )
                           }}>
                             {step.id === 'cache' && <Database size={14} />}
@@ -480,13 +480,13 @@ export default function App() {
                           </div>
 
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexGrow: 1, justifyContent: 'center' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#cbd5e1' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#0f172a' }}>
                               {step.id.toUpperCase() === 'CACHE' ? 'Cache Checker' :
                                step.id.toUpperCase() === 'GATE' ? 'Predictive Gate' :
                                step.id.toUpperCase() === 'LOCAL' ? 'Local LLM (0.5B)' :
                                step.id.toUpperCase() === 'TRUST' ? 'Signals Check' : 'Remote Expert'}
                             </span>
-                            <span style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.4' }}>{step.label}</span>
+                            <span style={{ fontSize: '12px', color: '#475569', lineHeight: '1.4' }}>{step.label}</span>
                           </div>
                         </div>
                       ))}
@@ -502,53 +502,53 @@ export default function App() {
         {activeTab === 'analytics' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
             <div>
-              <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '800' }}>Engine Analytics & Metrics</h1>
-              <p style={{ color: '#94a3b8', margin: 0 }}>View cost, latency, and query distributions saved by our hybrid routing framework.</p>
+              <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '800', color: '#0f172a' }}>Engine Analytics & Metrics</h1>
+              <p style={{ color: '#475569', margin: 0 }}>View cost, latency, and query distributions saved by our hybrid routing framework.</p>
             </div>
 
             {/* KPI Cards row */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
               <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669' }}>
                   <DollarSign size={24} />
                 </div>
                 <div>
-                  <span style={{ display: 'block', fontSize: '12px', color: '#94a3b8' }}>Total Dollars Saved</span>
-                  <span style={{ fontSize: '24px', fontWeight: '800', color: '#10b981', textShadow: '0 0 10px rgba(16,185,129,0.2)' }}>
+                  <span style={{ display: 'block', fontSize: '12px', color: '#475569' }}>Total Dollars Saved</span>
+                  <span style={{ fontSize: '24px', fontWeight: '800', color: '#059669', textShadow: '0 0 10px rgba(16,185,129,0.1)' }}>
                     ${stats.savings_dollars.toFixed(3)}
                   </span>
                 </div>
               </div>
 
               <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(99, 102, 241, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(79, 70, 229, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
                   <Activity size={24} />
                 </div>
                 <div>
-                  <span style={{ display: 'block', fontSize: '12px', color: '#94a3b8' }}>Total Queries Ran</span>
-                  <span style={{ fontSize: '24px', fontWeight: '800', color: '#fff' }}>{stats.total_queries}</span>
+                  <span style={{ display: 'block', fontSize: '12px', color: '#475569' }}>Total Queries Ran</span>
+                  <span style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a' }}>{stats.total_queries}</span>
                 </div>
               </div>
 
               <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(236, 72, 153, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ec4899' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(219, 39, 119, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#db2777' }}>
                   <Database size={24} />
                 </div>
                 <div>
-                  <span style={{ display: 'block', fontSize: '12px', color: '#94a3b8' }}>Cache Hits</span>
-                  <span style={{ fontSize: '24px', fontWeight: '800', color: '#fff' }}>
+                  <span style={{ display: 'block', fontSize: '12px', color: '#475569' }}>Cache Hits</span>
+                  <span style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a' }}>
                     {stats.cache_hits} ({stats.total_queries > 0 ? Math.round((stats.cache_hits/stats.total_queries)*100) : 0}%)
                   </span>
                 </div>
               </div>
 
               <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(245, 158, 11, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f59e0b' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97706' }}>
                   <TrendingUp size={24} />
                 </div>
                 <div>
-                  <span style={{ display: 'block', fontSize: '12px', color: '#94a3b8' }}>Escalation Rate</span>
-                  <span style={{ fontSize: '24px', fontWeight: '800', color: '#fff' }}>
+                  <span style={{ display: 'block', fontSize: '12px', color: '#475569' }}>Escalation Rate</span>
+                  <span style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a' }}>
                     {stats.total_queries > 0 ? Math.round((stats.escalations/stats.total_queries)*100) : 0}%
                   </span>
                 </div>
@@ -559,7 +559,7 @@ export default function App() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
               {/* Cost comparison chart */}
               <div className="glass-panel" style={{ height: '350px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700' }}>Cost Savings ($): Router vs Remote Baseline</h3>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>Cost Savings ($): Router vs Remote Baseline</h3>
                 <div style={{ flexGrow: 1, width: '100%', height: '80%' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
@@ -569,12 +569,12 @@ export default function App() {
                       ]}
                       margin={{ top: 20, right: 30, left: 10, bottom: 5 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                      <XAxis dataKey="name" stroke="#94a3b8" />
-                      <YAxis stroke="#94a3b8" unit="$" />
-                      <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }} />
-                      <Bar dataKey="cost" name="Total Spend" fill="#6366f1" radius={[8, 8, 0, 0]}>
-                        <Cell fill="#f43f5e" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
+                      <XAxis dataKey="name" stroke="#475569" />
+                      <YAxis stroke="#475569" unit="$" />
+                      <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid rgba(226,232,240,0.8)', color: '#0f172a' }} />
+                      <Bar dataKey="cost" name="Total Spend" fill="#4f46e5" radius={[8, 8, 0, 0]}>
+                        <Cell fill="#e11d48" />
                         <Cell fill="#10b981" />
                       </Bar>
                     </BarChart>
@@ -584,7 +584,7 @@ export default function App() {
 
               {/* Source Distribution donut */}
               <div className="glass-panel" style={{ height: '350px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700' }}>Routing Decisions Distribution</h3>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>Routing Decisions Distribution</h3>
                 <div style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {sourcePieData.length === 0 ? (
                     <span style={{ color: '#64748b' }}>No data logs found.</span>
@@ -614,8 +614,8 @@ export default function App() {
                         {sourcePieData.map((entry, idx) => (
                           <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
                             <div style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: COLORS[idx % COLORS.length] }} />
-                            <span style={{ color: '#cbd5e1' }}>{entry.name}:</span>
-                            <span style={{ fontWeight: '700' }}>{entry.value}</span>
+                            <span style={{ color: '#475569' }}>{entry.name}:</span>
+                            <span style={{ fontWeight: '700', color: '#0f172a' }}>{entry.value}</span>
                           </div>
                         ))}
                       </div>
@@ -631,41 +631,41 @@ export default function App() {
         {activeTab === 'calibration' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
             <div>
-              <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '800' }}>Threshold Tuning & Calibration</h1>
-              <p style={{ color: '#94a3b8', margin: 0 }}>Configure and balance routing parameters based on Pareto-frontier cost vs accuracy trade-offs.</p>
+              <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '800', color: '#0f172a' }}>Threshold Tuning & Calibration</h1>
+              <p style={{ color: '#475569', margin: 0 }}>Configure and balance routing parameters based on Pareto-frontier cost vs accuracy trade-offs.</p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
               {/* Sliders Form */}
               <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', borderBottom: '1px solid rgba(226,232,240,0.8)', paddingBottom: '12px', color: '#0f172a' }}>
                   Threshold Configurations
                 </h3>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: '600', fontSize: '14px' }}>Self-Consistency Threshold</span>
-                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#818cf8' }}>{config.consistency_threshold.toFixed(2)}</span>
+                    <span style={{ fontWeight: '600', fontSize: '14px', color: '#0f172a' }}>Self-Consistency Threshold</span>
+                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#4f46e5' }}>{config.consistency_threshold.toFixed(2)}</span>
                   </div>
                   <input 
                     type="range" min="0" max="1" step="0.05"
                     value={config.consistency_threshold}
                     onChange={(e) => setConfig(prev => ({ ...prev, consistency_threshold: parseFloat(e.target.value) }))}
-                    style={{ width: '100%', accentColor: '#6366f1' }}
+                    style={{ width: '100%', accentColor: '#4f46e5' }}
                   />
                   <span style={{ fontSize: '11px', color: '#64748b' }}>Minimum cosine-similarity score required between local temperature runs to trust local output.</span>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: '600', fontSize: '14px' }}>Token Entropy Limit</span>
-                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#818cf8' }}>{config.entropy_threshold.toFixed(2)}</span>
+                    <span style={{ fontWeight: '600', fontSize: '14px', color: '#0f172a' }}>Token Entropy Limit</span>
+                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#4f46e5' }}>{config.entropy_threshold.toFixed(2)}</span>
                   </div>
                   <input 
                     type="range" min="0.1" max="3" step="0.1"
                     value={config.entropy_threshold}
                     onChange={(e) => setConfig(prev => ({ ...prev, entropy_threshold: parseFloat(e.target.value) }))}
-                    style={{ width: '100%', accentColor: '#6366f1' }}
+                    style={{ width: '100%', accentColor: '#4f46e5' }}
                   />
                   <span style={{ fontSize: '11px', color: '#64748b' }}>Maximum average transition token entropy allowed before escalating. Lower means more strict.</span>
                 </div>
@@ -684,18 +684,18 @@ export default function App() {
 
               {/* Pareto Frontier curve */}
               <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '350px' }}>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700' }}>Calibration Pareto Frontier (Cost vs Accuracy)</h3>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>Calibration Pareto Frontier (Cost vs Accuracy)</h3>
                 <div style={{ flexGrow: 1, width: '100%', height: '80%' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
                       data={paretoData}
                       margin={{ top: 20, right: 30, left: 10, bottom: 5 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                      <XAxis dataKey="cost" name="Inference Spend per Run" label={{ value: 'Spend ($)', position: 'insideBottom', offset: -5 }} stroke="#94a3b8" />
-                      <YAxis domain={[50, 100]} name="Accuracy" label={{ value: 'Accuracy (%)', angle: -90, position: 'insideLeft', offset: 10 }} stroke="#94a3b8" />
-                      <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }} />
-                      <Area type="monotone" dataKey="accuracy" name="Router Accuracy (%)" stroke="#818cf8" fill="rgba(99, 102, 241, 0.15)" strokeWidth={2} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
+                      <XAxis dataKey="cost" name="Inference Spend per Run" label={{ value: 'Spend ($)', position: 'insideBottom', offset: -5 }} stroke="#475569" />
+                      <YAxis domain={[50, 100]} name="Accuracy" label={{ value: 'Accuracy (%)', angle: -90, position: 'insideLeft', offset: 10 }} stroke="#475569" />
+                      <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid rgba(226,232,240,0.8)', color: '#0f172a' }} />
+                      <Area type="monotone" dataKey="accuracy" name="Router Accuracy (%)" stroke="#4f46e5" fill="rgba(79, 70, 229, 0.1)" strokeWidth={2} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -708,21 +708,21 @@ export default function App() {
         {activeTab === 'logs' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
             <div>
-              <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '800' }}>Telemetry Execution Logs</h1>
-              <p style={{ color: '#94a3b8', margin: 0 }}>Review historical execution traces and diagnostics collected in `routing_execution.jsonl`.</p>
+              <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '800', color: '#0f172a' }}>Telemetry Execution Logs</h1>
+              <p style={{ color: '#475569', margin: 0 }}>Review historical execution traces and diagnostics collected in `routing_execution.jsonl`.</p>
             </div>
 
             <div className="glass-panel" style={{ padding: '0px', overflow: 'hidden' }}>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead>
-                    <tr style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(55,65,81,0.4)' }}>
-                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '700', color: '#94a3b8' }}>Timestamp</th>
-                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '700', color: '#94a3b8' }}>Query Prompt</th>
-                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '700', color: '#94a3b8' }}>Strategy</th>
-                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '700', color: '#94a3b8' }}>Category</th>
-                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '700', color: '#94a3b8' }}>Final Source</th>
-                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '700', color: '#94a3b8' }}>Tokens (L/R)</th>
+                    <tr style={{ backgroundColor: 'rgba(0,0,0,0.02)', borderBottom: '1px solid rgba(226,232,240,0.8)' }}>
+                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '700', color: '#475569' }}>Timestamp</th>
+                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '700', color: '#475569' }}>Query Prompt</th>
+                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '700', color: '#475569' }}>Strategy</th>
+                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '700', color: '#475569' }}>Category</th>
+                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '700', color: '#475569' }}>Final Source</th>
+                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '700', color: '#475569' }}>Tokens (L/R)</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -735,28 +735,27 @@ export default function App() {
                     ) : (
                       history.map((log, idx) => (
                         <tr key={idx} style={{ 
-                          borderBottom: '1px solid rgba(55,65,81,0.2)',
-                          backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)',
+                          borderBottom: '1px solid rgba(226,232,240,0.4)',
+                          backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.01)',
                           transition: 'background-color 0.2s'
                         }}
-                        className="hover:bg-slate-800/40"
                         >
                           <td style={{ padding: '14px 16px', fontSize: '12px', color: '#64748b' }}>
                             {log.timestamp ? log.timestamp.split('T')[1].substring(0, 8) : 'Unknown'}
                           </td>
                           <td style={{ 
-                            padding: '14px 16px', fontSize: '13px', color: '#e2e8f0', 
+                            padding: '14px 16px', fontSize: '13px', color: '#0f172a', 
                             maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
                           }}>
                             {log.prompt}
                           </td>
-                          <td style={{ padding: '14px 16px', fontSize: '13px', color: '#94a3b8' }}>
+                          <td style={{ padding: '14px 16px', fontSize: '13px', color: '#475569' }}>
                             {log.routing_strategy}
                           </td>
                           <td style={{ padding: '14px 16px', fontSize: '12px' }}>
                             <span style={{
-                              padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(255,255,255,0.05)',
-                              color: '#cbd5e1', fontSize: '11px', fontWeight: '600'
+                              padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(0,0,0,0.05)',
+                              color: '#475569', fontSize: '11px', fontWeight: '600'
                             }}>
                               {log.category}
                             </span>
@@ -764,12 +763,12 @@ export default function App() {
                           <td style={{ padding: '14px 16px', fontSize: '13px', fontWeight: '600' }}>
                             <span style={{
                               color: log.source.toLowerCase().includes('cache') ? '#10b981' :
-                                     log.source.toLowerCase().includes('local') ? '#38bdf8' : '#fb923c'
+                                     log.source.toLowerCase().includes('local') ? '#0284c7' : '#d97706'
                             }}>
                               {log.source}
                             </span>
                           </td>
-                          <td style={{ padding: '14px 16px', fontSize: '13px', color: '#cbd5e1' }}>
+                          <td style={{ padding: '14px 16px', fontSize: '13px', color: '#475569' }}>
                             {log.local_tokens_used || 0} / {log.remote_tokens_used || 0}
                           </td>
                         </tr>

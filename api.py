@@ -35,11 +35,21 @@ async def route_prompt(req: RouteRequest):
     try:
         executor = UnifiedExecutor()
         
-        # Override temporary configs if provided (or use config defaults)
+        # Map frontend strategy strings to internal executor params
+        strat = req.routing_strategy
+        use_remote = None
+        if strat == "static-local":
+            strat = "static"
+            use_remote = False
+        elif strat == "static-remote":
+            strat = "static"
+            use_remote = True
+            
         start_time = time.time()
         res = executor.execute(
             prompt=req.prompt,
-            routing_strategy=req.routing_strategy,
+            routing_strategy=strat,
+            use_remote=use_remote,
             category=req.category,
             required_keys=req.required_keys,
             temperature=req.temperature

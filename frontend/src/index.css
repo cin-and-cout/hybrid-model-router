@@ -1,20 +1,20 @@
 :root {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --bg-main: #0b0f19;
-  --bg-card: rgba(17, 24, 39, 0.7);
-  --bg-card-hover: rgba(31, 41, 55, 0.8);
-  --border-color: rgba(55, 65, 81, 0.4);
+  --bg-main: #f8fafc;
+  --bg-card: rgba(255, 255, 255, 0.9);
+  --bg-card-hover: rgba(241, 245, 249, 0.95);
+  --border-color: rgba(226, 232, 240, 0.8);
   --border-focus: rgba(99, 102, 241, 0.6);
-  --text-primary: #f3f4f6;
-  --text-secondary: #9ca3af;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
   
   /* Primary Gradients */
-  --grad-primary: linear-gradient(135deg, #6366f1, #a855f7);
-  --grad-accent: linear-gradient(135deg, #ec4899, #f43f5e);
+  --grad-primary: linear-gradient(135deg, #4f46e5, #7c3aed);
+  --grad-accent: linear-gradient(135deg, #db2777, #e11d48);
   --grad-success: linear-gradient(135deg, #10b981, #059669);
   --grad-warning: linear-gradient(135deg, #f59e0b, #d97706);
   
-  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
+  --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.1);
   --shadow-glow-success: 0 0 20px rgba(16, 185, 129, 0.15);
 }
 
@@ -34,14 +34,14 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0b0f19;
+  background: #f8fafc;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(31, 41, 55, 0.8);
+  background: rgba(203, 213, 225, 0.8);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(55, 65, 81, 0.8);
+  background: rgba(148, 163, 184, 0.8);
 }
 
 /* Utilities */
