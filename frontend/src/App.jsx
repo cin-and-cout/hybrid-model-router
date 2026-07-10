@@ -506,7 +506,15 @@ export default function App() {
                 <div className="glass-panel" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '18px' }}>
                   <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>Decision Trace Path</h3>
                   
-                  {traceSteps.length === 0 ? (
+                  {execLoading ? (
+                    <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#0284c7', textAlign: 'center', gap: '16px', minHeight: '180px' }}>
+                      <RefreshCw size={32} className="animate-spin" />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <span style={{ fontSize: '14px', fontWeight: '600', color: '#0f172a' }}>Tracing Execution Path...</span>
+                        <span style={{ fontSize: '12px', color: '#64748b' }}>Running cache check and model evaluation</span>
+                      </div>
+                    </div>
+                  ) : traceSteps.length === 0 ? (
                     <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#64748b', textAlign: 'center', gap: '12px' }}>
                       <Activity size={32} />
                       <span style={{ fontSize: '14px' }}>No active runs.<br/>Click "Run Query Engine" to view decision mapping.</span>
