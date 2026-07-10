@@ -7,7 +7,7 @@ import {
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, 
   ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend,
-  LineChart, Line
+  LineChart, Line, ReferenceLine, ReferenceDot
 } from 'recharts';
 
 export default function App() {
@@ -819,6 +819,15 @@ export default function App() {
                         <YAxis domain={[50, 100]} stroke="#475569" tickFormatter={(v) => `${v}%`} />
                         <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid rgba(226,232,240,0.8)', color: '#0f172a' }} />
                         <Area type="monotone" dataKey="accuracy" name="Router Accuracy (%)" stroke="#0284c7" fill="rgba(2, 132, 199, 0.1)" strokeWidth={2} />
+                        <ReferenceDot 
+                          x={estCost} 
+                          y={estAccuracy} 
+                          r={6} 
+                          fill="#ef4444" 
+                          stroke="#ffffff" 
+                          strokeWidth={2.5} 
+                          label={{ value: "Active Router", fill: "#ef4444", fontSize: 11, position: 'top', fontWeight: 'bold' }} 
+                        />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
@@ -853,6 +862,31 @@ export default function App() {
                         <Legend />
                         <Line yAxisId="left" type="monotone" dataKey="accuracy" name="Accuracy (%)" stroke="#0284c7" strokeWidth={2.5} activeDot={{ r: 8 }} />
                         <Line yAxisId="right" type="monotone" dataKey="cost" name="Query Cost ($)" stroke="#0d9488" strokeWidth={2.5} />
+                        <ReferenceLine 
+                          yAxisId="left"
+                          x={config.consistency_threshold} 
+                          stroke="#ef4444" 
+                          strokeDasharray="4 4" 
+                          label={{ value: `Active T: ${config.consistency_threshold}`, fill: "#ef4444", fontSize: 10, position: 'insideTopLeft' }} 
+                        />
+                        <ReferenceDot
+                          yAxisId="left"
+                          x={config.consistency_threshold}
+                          y={estAccuracy}
+                          r={6}
+                          fill="#0284c7"
+                          stroke="#ffffff"
+                          strokeWidth={2}
+                        />
+                        <ReferenceDot
+                          yAxisId="right"
+                          x={config.consistency_threshold}
+                          y={estCost}
+                          r={6}
+                          fill="#0d9488"
+                          stroke="#ffffff"
+                          strokeWidth={2}
+                        />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
