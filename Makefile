@@ -34,7 +34,7 @@ optimize:
 	docker compose run --rm app python sweep_optimizer.py
 
 dashboard:
-	docker compose run --rm app streamlit run dashboard.py --server.port 8501 --server.address 0.0.0.0
+	docker compose run --rm --service-ports app streamlit run dashboard.py --server.port 8501 --server.address 0.0.0.0
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
