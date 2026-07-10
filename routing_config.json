@@ -1,6 +1,6 @@
 {
   "consistency_threshold": 0.65,
-  "entropy_threshold": 0.9,
+  "entropy_threshold": 1.7,
   "accuracy_floor": 0.75,
   "calibrated_accuracy": 0.8076923076923077,
   "calibrated_remote_tokens": 350
