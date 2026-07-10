@@ -41,7 +41,7 @@ clean:
 	rm -f routing_execution.jsonl eval_results_log.json
 
 run-api:
-	docker compose run --rm app uvicorn api:app --host 0.0.0.0 --port 8000
+	docker compose run --rm --service-ports app uvicorn api:app --host 0.0.0.0 --port 8000
 
 run-frontend:
 	cd frontend && npm run dev -- --host 0.0.0.0
