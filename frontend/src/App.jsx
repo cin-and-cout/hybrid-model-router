@@ -57,7 +57,7 @@ export default function App() {
   ];
 
   // Fetch telemetry and configurations
-  const fetchTelemetry = async () => {
+  const fetchTelemetry = async (manual = false) => {
     setStatsLoading(true);
     try {
       const statsRes = await fetch('http://localhost:8000/api/stats');
@@ -67,8 +67,14 @@ export default function App() {
       const historyRes = await fetch('http://localhost:8000/api/history');
       const historyData = await historyRes.json();
       setHistory(historyData);
+      if (manual === true) {
+        showNotification("Telemetry and stats refreshed!", "success");
+      }
     } catch (err) {
       console.error("Error fetching telemetry:", err);
+      if (manual === true) {
+        showNotification("Failed to refresh stats: " + err.message, "error");
+      }
     } finally {
       setStatsLoading(false);
     }
@@ -259,6 +265,9 @@ export default function App() {
       {/* Sidebar Navigation */}
       <div style={{ 
         width: '260px', 
+        minWidth: '260px',
+        maxWidth: '260px',
+        flexShrink: 0,
         borderRight: '1px solid rgba(226, 232, 240, 0.8)', 
         backgroundColor: '#ffffff',
         padding: '24px 16px',
@@ -354,7 +363,7 @@ export default function App() {
           gap: '8px'
         }}>
           <button 
-            onClick={fetchTelemetry}
+            onClick={() => fetchTelemetry(true)}
             style={{
               display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: 'transparent',
               border: '1px solid rgba(71, 85, 105, 0.15)', padding: '8px 12px', borderRadius: '6px',
