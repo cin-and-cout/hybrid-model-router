@@ -9,6 +9,7 @@ help:
 	@echo "  make test     - Run the full pytest suite in the docker container"
 	@echo "  make eval     - Run the baseline and calibrated hybrid evaluation script"
 	@echo "  make optimize - Run the threshold sweep and calibration optimization script"
+	@echo "  make dashboard - Run the Streamlit interactive dashboard"
 	@echo "  make clean    - Clean python cache files and local execution logs"
 
 build:
@@ -31,6 +32,9 @@ eval:
 
 optimize:
 	docker compose run --rm app python sweep_optimizer.py
+
+dashboard:
+	docker compose run --rm app streamlit run dashboard.py --server.port 8501 --server.address 0.0.0.0
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +

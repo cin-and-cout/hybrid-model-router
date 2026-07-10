@@ -181,8 +181,8 @@ graph TD
 *Goal: Create a visually compelling interactive user interface to showcase the router's advantages in real-time.*
 *Depends on all previous phases.*
 
-- [ ] **Task 8.1: Streamlit Dashboard Implementation**
+- [x] **Task 8.1: Streamlit Dashboard Implementation**
   - Build a live web interface presenting a prompt sandbox and real-time visualization of entropy, consistency, and structural signals.
-- [ ] **Task 8.2: Telemetry Metrics Visualizer**
+- [x] **Task 8.2: Telemetry Metrics Visualizer**
   - Integrate live counters for dollars and tokens saved compared to a Remote-Only baseline.
   - Plot a live Pareto frontier curve illustrating the cost-accuracy trade-offs of calibrated thresholds.
