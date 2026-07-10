@@ -815,8 +815,8 @@ export default function App() {
                         margin={{ top: 20, right: 30, left: 45, bottom: 25 }}
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
-                        <XAxis dataKey="cost" stroke="#475569" tickFormatter={(v) => `$${v.toFixed(3)}`} label={{ value: 'Spend ($)', position: 'insideBottom', offset: -15 }} />
-                        <YAxis domain={[50, 100]} stroke="#475569" tickFormatter={(v) => `${v}%`} label={{ value: 'Accuracy (%)', angle: -90, position: 'insideLeft', offset: -35 }} />
+                        <XAxis dataKey="cost" stroke="#475569" tickFormatter={(v) => `$${v.toFixed(3)}`} />
+                        <YAxis domain={[50, 100]} stroke="#475569" tickFormatter={(v) => `${v}%`} />
                         <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid rgba(226,232,240,0.8)', color: '#0f172a' }} />
                         <Area type="monotone" dataKey="accuracy" name="Router Accuracy (%)" stroke="#0284c7" fill="rgba(2, 132, 199, 0.1)" strokeWidth={2} />
                       </AreaChart>
@@ -846,9 +846,9 @@ export default function App() {
                         margin={{ top: 20, right: 55, left: 45, bottom: 25 }}
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
-                        <XAxis dataKey="threshold" stroke="#475569" label={{ value: 'Sensitivity Threshold', position: 'insideBottom', offset: -15 }} />
-                        <YAxis yAxisId="left" stroke="#0284c7" domain={[50, 100]} tickFormatter={(v) => `${v}%`} label={{ value: 'Accuracy (%)', angle: -90, position: 'insideLeft', offset: -35 }} />
-                        <YAxis yAxisId="right" orientation="right" stroke="#0d9488" tickFormatter={(v) => `$${v.toFixed(4)}`} label={{ value: 'Query Cost ($)', angle: 90, position: 'insideRight', offset: -45 }} />
+                        <XAxis dataKey="threshold" stroke="#475569" />
+                        <YAxis yAxisId="left" stroke="#0284c7" domain={[50, 100]} tickFormatter={(v) => `${v}%`} />
+                        <YAxis yAxisId="right" orientation="right" stroke="#0d9488" tickFormatter={(v) => `$${v.toFixed(4)}`} />
                         <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid rgba(226,232,240,0.8)', color: '#0f172a' }} />
                         <Legend />
                         <Line yAxisId="left" type="monotone" dataKey="accuracy" name="Accuracy (%)" stroke="#0284c7" strokeWidth={2.5} activeDot={{ r: 8 }} />
