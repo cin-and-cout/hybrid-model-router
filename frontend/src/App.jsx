@@ -224,7 +224,7 @@ export default function App() {
   };
 
   // Pie chart data prep
-  const sourcePieData = Object.entries(stats.source_distribution).map(([name, value]) => ({
+  const sourcePieData = Object.entries(stats.source_distribution || {}).map(([name, value]) => ({
     name, value
   }));
 
@@ -920,10 +920,10 @@ export default function App() {
                           </td>
                           <td style={{ padding: '14px 16px', fontSize: '13px', fontWeight: '600' }}>
                             <span style={{
-                              color: log.source.toLowerCase().includes('cache') ? '#10b981' :
-                                     log.source.toLowerCase().includes('local') ? '#0284c7' : '#d97706'
+                              color: (log.source || '').toLowerCase().includes('cache') ? '#10b981' :
+                                     (log.source || '').toLowerCase().includes('local') ? '#0284c7' : '#d97706'
                             }}>
-                              {log.source}
+                              {log.source || 'Unknown'}
                             </span>
                           </td>
                           <td style={{ padding: '14px 16px', fontSize: '13px', color: '#475569' }}>
