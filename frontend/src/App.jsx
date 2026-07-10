@@ -191,7 +191,7 @@ export default function App() {
     name, value
   }));
 
-  const COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#db2777', '#3b82f6'];
+  const COLORS = ['#0284c7', '#10b981', '#f59e0b', '#db2777', '#3b82f6'];
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
@@ -242,7 +242,7 @@ export default function App() {
               width: '32px', 
               height: '32px', 
               borderRadius: '8px', 
-              background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+              background: 'linear-gradient(135deg, #0284c7, #0d9488)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
@@ -260,8 +260,8 @@ export default function App() {
             style={{
               display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '8px',
               border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
-              backgroundColor: activeTab === 'analytics' ? 'rgba(79, 70, 229, 0.08)' : 'transparent',
-              color: activeTab === 'analytics' ? '#4f46e5' : '#475569',
+              backgroundColor: activeTab === 'analytics' ? 'rgba(2, 132, 199, 0.08)' : 'transparent',
+              color: activeTab === 'analytics' ? '#0284c7' : '#475569',
               fontWeight: activeTab === 'analytics' ? '600' : '400',
               transition: 'all 0.2s'
             }}
@@ -275,8 +275,8 @@ export default function App() {
             style={{
               display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '8px',
               border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
-              backgroundColor: activeTab === 'sandbox' ? 'rgba(79, 70, 229, 0.08)' : 'transparent',
-              color: activeTab === 'sandbox' ? '#4f46e5' : '#475569',
+              backgroundColor: activeTab === 'sandbox' ? 'rgba(2, 132, 199, 0.08)' : 'transparent',
+              color: activeTab === 'sandbox' ? '#0284c7' : '#475569',
               fontWeight: activeTab === 'sandbox' ? '600' : '400',
               transition: 'all 0.2s'
             }}
@@ -290,8 +290,8 @@ export default function App() {
             style={{
               display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '8px',
               border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
-              backgroundColor: activeTab === 'calibration' ? 'rgba(79, 70, 229, 0.08)' : 'transparent',
-              color: activeTab === 'calibration' ? '#4f46e5' : '#475569',
+              backgroundColor: activeTab === 'calibration' ? 'rgba(2, 132, 199, 0.08)' : 'transparent',
+              color: activeTab === 'calibration' ? '#0284c7' : '#475569',
               fontWeight: activeTab === 'calibration' ? '600' : '400',
               transition: 'all 0.2s'
             }}
@@ -305,8 +305,8 @@ export default function App() {
             style={{
               display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '8px',
               border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
-              backgroundColor: activeTab === 'logs' ? 'rgba(79, 70, 229, 0.08)' : 'transparent',
-              color: activeTab === 'logs' ? '#4f46e5' : '#475569',
+              backgroundColor: activeTab === 'logs' ? 'rgba(2, 132, 199, 0.08)' : 'transparent',
+              color: activeTab === 'logs' ? '#0284c7' : '#475569',
               fontWeight: activeTab === 'logs' ? '600' : '400',
               transition: 'all 0.2s'
             }}
@@ -450,7 +450,7 @@ export default function App() {
                         <span style={{ fontWeight: '700', fontSize: '16px', color: '#0f172a' }}>Execution Output</span>
                       </div>
                       <div style={{ display: 'flex', gap: '10px' }}>
-                        <span style={{ padding: '4px 8px', borderRadius: '4px', backgroundColor: 'rgba(79, 70, 229, 0.08)', fontSize: '12px', color: '#4f46e5', fontWeight: '600' }}>
+                        <span style={{ padding: '4px 8px', borderRadius: '4px', backgroundColor: 'rgba(2, 132, 199, 0.08)', fontSize: '12px', color: '#0284c7', fontWeight: '600' }}>
                           Resolved: {execResult.source}
                         </span>
                         <span style={{ padding: '4px 8px', borderRadius: '4px', backgroundColor: 'rgba(16, 185, 129, 0.08)', fontSize: '12px', color: '#059669', fontWeight: '600' }}>
@@ -489,7 +489,7 @@ export default function App() {
                           {idx < traceSteps.length - 1 && (
                             <div style={{
                               position: 'absolute', left: '15px', top: '30px', bottom: '-20px', width: '2px',
-                              backgroundColor: 'rgba(79, 70, 229, 0.2)'
+                              backgroundColor: 'rgba(2, 132, 199, 0.2)'
                             }} />
                           )}
                           
@@ -500,14 +500,14 @@ export default function App() {
                             backgroundColor: step.status === 'success' ? 'rgba(16, 185, 129, 0.1)' :
                                              step.status === 'failed' ? 'rgba(239, 68, 68, 0.1)' :
                                              step.status === 'escalated' ? 'rgba(245, 158, 11, 0.1)' :
-                                             step.status === 'miss' ? 'rgba(148, 163, 184, 0.1)' : 'rgba(79, 70, 229, 0.1)',
+                                             step.status === 'miss' ? 'rgba(148, 163, 184, 0.1)' : 'rgba(2, 132, 199, 0.1)',
                             color: step.status === 'success' ? '#10b981' :
                                    step.status === 'failed' ? '#ef4444' :
-                                   step.status === 'escalated' ? '#f59e0b' : '#4f46e5',
+                                   step.status === 'escalated' ? '#f59e0b' : '#0284c7',
                             border: '1px solid ' + (
                               step.status === 'success' ? 'rgba(16, 185, 129, 0.3)' :
                               step.status === 'failed' ? 'rgba(239, 68, 68, 0.3)' :
-                              step.status === 'escalated' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(79, 70, 229, 0.3)'
+                              step.status === 'escalated' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(2, 132, 199, 0.3)'
                             )
                           }}>
                             {step.id === 'cache' && <Database size={14} />}
@@ -560,7 +560,7 @@ export default function App() {
               </div>
 
               <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(79, 70, 229, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(2, 132, 199, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7' }}>
                   <Activity size={24} />
                 </div>
                 <div>
@@ -612,7 +612,7 @@ export default function App() {
                       <XAxis dataKey="name" stroke="#475569" />
                       <YAxis stroke="#475569" unit="$" />
                       <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid rgba(226,232,240,0.8)', color: '#0f172a' }} />
-                      <Bar dataKey="cost" name="Total Spend" fill="#4f46e5" radius={[8, 8, 0, 0]}>
+                      <Bar dataKey="cost" name="Total Spend" fill="#0284c7" radius={[8, 8, 0, 0]}>
                         <Cell fill="#e11d48" />
                         <Cell fill="#10b981" />
                       </Bar>
@@ -684,13 +684,13 @@ export default function App() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontWeight: '600', fontSize: '14px', color: '#0f172a' }}>Self-Consistency Threshold</span>
-                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#4f46e5' }}>{config.consistency_threshold.toFixed(2)}</span>
+                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#0284c7' }}>{config.consistency_threshold.toFixed(2)}</span>
                   </div>
                   <input 
                     type="range" min="0" max="1" step="0.05"
                     value={config.consistency_threshold}
                     onChange={(e) => setConfig(prev => ({ ...prev, consistency_threshold: parseFloat(e.target.value) }))}
-                    style={{ width: '100%', accentColor: '#4f46e5' }}
+                    style={{ width: '100%', accentColor: '#0284c7' }}
                   />
                   <span style={{ fontSize: '11px', color: '#64748b' }}>Minimum cosine-similarity score required between local temperature runs to trust local output.</span>
                 </div>
@@ -698,13 +698,13 @@ export default function App() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontWeight: '600', fontSize: '14px', color: '#0f172a' }}>Token Entropy Limit</span>
-                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#4f46e5' }}>{config.entropy_threshold.toFixed(2)}</span>
+                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#0284c7' }}>{config.entropy_threshold.toFixed(2)}</span>
                   </div>
                   <input 
                     type="range" min="0.1" max="3" step="0.1"
                     value={config.entropy_threshold}
                     onChange={(e) => setConfig(prev => ({ ...prev, entropy_threshold: parseFloat(e.target.value) }))}
-                    style={{ width: '100%', accentColor: '#4f46e5' }}
+                    style={{ width: '100%', accentColor: '#0284c7' }}
                   />
                   <span style={{ fontSize: '11px', color: '#64748b' }}>Maximum average transition token entropy allowed before escalating. Lower means more strict.</span>
                 </div>
@@ -734,7 +734,7 @@ export default function App() {
                       <XAxis dataKey="cost" name="Inference Spend per Run" label={{ value: 'Spend ($)', position: 'insideBottom', offset: -5 }} stroke="#475569" />
                       <YAxis domain={[50, 100]} name="Accuracy" label={{ value: 'Accuracy (%)', angle: -90, position: 'insideLeft', offset: 10 }} stroke="#475569" />
                       <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid rgba(226,232,240,0.8)', color: '#0f172a' }} />
-                      <Area type="monotone" dataKey="accuracy" name="Router Accuracy (%)" stroke="#4f46e5" fill="rgba(79, 70, 229, 0.1)" strokeWidth={2} />
+                      <Area type="monotone" dataKey="accuracy" name="Router Accuracy (%)" stroke="#0284c7" fill="rgba(2, 132, 199, 0.1)" strokeWidth={2} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>

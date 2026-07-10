@@ -4,17 +4,17 @@
   --bg-card: rgba(255, 255, 255, 0.9);
   --bg-card-hover: rgba(241, 245, 249, 0.95);
   --border-color: rgba(226, 232, 240, 0.8);
-  --border-focus: rgba(99, 102, 241, 0.6);
+  --border-focus: rgba(14, 165, 233, 0.6);
   --text-primary: #0f172a;
   --text-secondary: #475569;
   
   /* Primary Gradients */
-  --grad-primary: linear-gradient(135deg, #4f46e5, #7c3aed);
+  --grad-primary: linear-gradient(135deg, #0284c7, #0d9488);
   --grad-accent: linear-gradient(135deg, #db2777, #e11d48);
   --grad-success: linear-gradient(135deg, #10b981, #059669);
   --grad-warning: linear-gradient(135deg, #f59e0b, #d97706);
   
-  --shadow-glow: 0 2px 8px rgba(79, 70, 229, 0.08);
+  --shadow-glow: 0 2px 8px rgba(2, 132, 199, 0.08);
   --shadow-glow-success: 0 2px 8px rgba(16, 185, 129, 0.08);
 }
 
@@ -57,7 +57,7 @@ body {
 }
 
 .glass-panel:hover {
-  border-color: rgba(99, 102, 241, 0.3);
+  border-color: rgba(14, 165, 233, 0.3);
 }
 
 .text-gradient {
@@ -90,7 +90,7 @@ body {
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
 }
 
 .btn-primary:active {
@@ -106,10 +106,10 @@ body {
 /* Animation utilities */
 @keyframes pulseGlow {
   0%, 100% {
-    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.08);
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
   }
   50% {
-    box-shadow: 0 4px 16px rgba(79, 70, 229, 0.15);
+    box-shadow: 0 4px 16px rgba(2, 132, 199, 0.15);
   }
 }
 
