@@ -22,5 +22,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
-# Default command to run tests, can be overridden to run the main application
-CMD ["python", "-m", "pytest"]
+# Default command to run the Streamlit dashboard
+CMD ["streamlit", "run", "dashboard.py", "--server.port", "8000", "--server.address", "0.0.0.0"]
