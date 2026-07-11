@@ -10,10 +10,7 @@ ENV PYTHONUNBUFFERED=1 \
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies (like curl for health checks and network diagnostics)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# System dependencies skipped for faster/offline builds
 
 # Copy and install dependencies
 COPY requirements.txt .
