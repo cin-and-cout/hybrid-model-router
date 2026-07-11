@@ -4,7 +4,7 @@ import pydantic
 
 def main():
     print("==================================================")
-    print("Hello from the Hybrid Model Router Agent!")
+    print("Hello from RouteLM: Adaptive Model Routing Engine!")
     print(f"Python Version: {sys.version}")
     print("Dependencies verification:")
     print(f"  - httpx: {httpx.__version__}")

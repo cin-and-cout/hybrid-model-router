@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from routing_agent.executor import UnifiedExecutor
 
-app = FastAPI(title="Hybrid Model Router API")
+app = FastAPI(title="RouteLM: Adaptive Model Routing Engine API")
 
 # Enable CORS for frontend integration
 app.add_middleware(

@@ -1,6 +1,6 @@
-# Hybrid Model Router (HMR)
+# RouteLM: Adaptive Model Routing Engine
 
-The Hybrid Model Router is a containerized, production-grade LLM routing agent designed to maximize accuracy while minimizing inference costs and latency. It acts as an intelligent traffic controller between a low-cost local model hierarchy (e.g., a lightweight Qwen 2.5 0.5B running on Ollama) and highly capable, commercial remote models (e.g., Llama 3 70B running on Fireworks AI).
+RouteLM is a containerized, production-grade LLM routing agent designed to maximize accuracy while minimizing inference costs and latency. It acts as an intelligent traffic controller between a low-cost local model hierarchy (e.g., a lightweight Qwen 2.5 0.5B running on Ollama) and highly capable, commercial remote models (e.g., Llama 3 70B running on Fireworks AI).
 
 By evaluating real-time confidence metrics, budget consumption, and query complexity, the router dynamically routes simple prompts to local instances, saving substantial API spend, and escalates to larger models only when local validation signals fail.
 
@@ -128,7 +128,7 @@ The project includes a `Makefile` to simplify command executions:
 ## Developer Usage
 
 ### 1. Basic Routing Example
-Below is an example showing how to initialize and execute queries using the hybrid model router:
+Below is an example showing how to initialize and execute queries using RouteLM:
 
 ```python
 from routing_agent.executor import UnifiedExecutor

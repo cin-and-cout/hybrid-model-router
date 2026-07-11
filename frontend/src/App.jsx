@@ -289,9 +289,9 @@ export default function App() {
             }}>
               <Cpu size={18} color="#fff" />
             </div>
-            <span style={{ fontSize: '18px', fontWeight: '800', tracking: '-0.025em', color: '#0f172a' }}>HMR Engine</span>
+            <span style={{ fontSize: '18px', fontWeight: '800', tracking: '-0.025em', color: '#0f172a' }}>RouteLM Engine</span>
           </div>
-          <span style={{ fontSize: '12px', color: '#64748b' }}>Hybrid Model Router v2.4</span>
+          <span style={{ fontSize: '12px', color: '#64748b' }}>RouteLM: Adaptive Model Routing Engine v2.4</span>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexGrow: 1 }}>
