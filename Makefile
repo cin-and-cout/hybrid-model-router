@@ -13,6 +13,7 @@ help:
 	@echo "  make run-api       - Start the FastAPI backend"
 	@echo "  make run-frontend  - Start the React frontend dashboard"
 	@echo "  make dashboard     - Start both backend and frontend dashboard concurrently"
+	@echo "  make run-streamlit - Start the Streamlit dashboard"
 
 build:
 	docker compose build
@@ -49,4 +50,8 @@ run-frontend:
 dashboard:
 	@echo "Starting backend and frontend..."
 	make -j2 run-api run-frontend
+
+run-streamlit:
+	streamlit run dashboard.py --server.port 8501 --server.address 0.0.0.0
+
 
